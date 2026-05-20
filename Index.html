@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Logmark — Private AI for People Operations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Editorial+New:ital@0;1&family=Epilogue:wght@300;400;500;600&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink:     #1a1a18;
+  --ink2:    #3d3d38;
+  --ink3:    #7a7a72;
+  --rule:    #e2e0d8;
+  --cream:   #f5f3ed;
+  --paper:   #faf9f6;
+  --white:   #ffffff;
+  --sage:    #4a5c4e;
+  --sage-l:  #e8ede9;
+  --slate:   #3c4a5c;
+  --slate-l: #e6eaf0;
+  --stone:   #5c5448;
+  --amber:   #8c6d3f;
+  --amber-l: #f5ede0;
+  --r: 2px;
+}
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { background:var(--paper); color:var(--ink); font-family:'Epilogue',sans-serif; font-weight:400; overflow-x:hidden; }
+
+/* ─── TYPE ─── */
+.display { font-family:'Playfair Display',Georgia,serif; }
+h1,h2,h3 { font-family:'Playfair Display',Georgia,serif; font-weight:400; letter-spacing:-0.02em; line-height:1.1; }
+p { line-height:1.75; color:var(--ink2); }
+
+/* ─── NAV ─── */
+nav {
+  position:sticky; top:0; z-index:100;
+  background:rgba(250,249,246,0.92); backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--rule);
+  padding:0 48px;
+  display:flex; align-items:center; justify-content:space-between;
+  height:64px;
+}
+.nav-logo { font-family:'Playfair Display',Georgia,serif; font-size:20px; color:var(--ink); text-decoration:none; letter-spacing:0.01em; }
+.nav-logo em { font-style:normal; color:var(--sage); }
+.nav-links { display:flex; gap:32px; list-style:none; }
+.nav-links a { font-size:13px; color:var(--ink3); text-decoration:none; letter-spacing:0.04em; transition:color .2s; }
+.nav-links a:hover { color:var(--ink); }
+.nav-cta { font-size:13px; font-weight:500; padding:9px 22px; background:var(--ink); color:var(--white); border:none; cursor:pointer; border-radius:var(--r); text-decoration:none; letter-spacing:0.03em; transition:background .2s; }
+.nav-cta:hover { background:var(--ink2); }
+
+/* ─── HERO ─── */
+.hero {
+  max-width:1100px; margin:0 auto;
+  padding:100px 48px 80px;
+  display:grid; grid-template-columns:1fr 1fr; gap:80px; align-items:center;
+}
+.hero-kicker { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:var(--sage); margin-bottom:24px; }
+.hero h1 { font-size:clamp(40px,5vw,64px); margin-bottom:24px; color:var(--ink); }
+.hero h1 em { font-style:italic; color:var(--sage); }
+.hero-lead { font-size:17px; line-height:1.7; color:var(--ink3); margin-bottom:40px; max-width:440px; }
+.hero-actions { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+.btn-p { font-size:14px; font-weight:500; padding:13px 28px; background:var(--ink); color:var(--white); border:none; border-radius:var(--r); cursor:pointer; text-decoration:none; transition:background .2s; }
+.btn-p:hover { background:var(--ink2); }
+.btn-s { font-size:14px; padding:13px 28px; background:transparent; color:var(--ink); border:1px solid var(--rule); border-radius:var(--r); cursor:pointer; text-decoration:none; transition:border-color .2s; }
+.btn-s:hover { border-color:var(--ink3); }
+
+/* hero right — two module cards stacked */
+.hero-modules { display:flex; flex-direction:column; gap:12px; }
+.hero-mod {
+  border:1px solid var(--rule); background:var(--white);
+  border-radius:4px; padding:24px 28px;
+  display:flex; gap:18px; align-items:flex-start;
+  transition:box-shadow .25s;
+}
+.hero-mod:hover { box-shadow:0 4px 24px rgba(26,26,24,0.07); }
+.hm-pip { width:10px; height:10px; border-radius:50%; margin-top:5px; flex-shrink:0; }
+.hm-pip.sage { background:var(--sage); }
+.hm-pip.slate { background:var(--slate); }
+.hm-label { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.15em; text-transform:uppercase; color:var(--ink3); margin-bottom:6px; }
+.hm-title { font-family:'Playfair Display',Georgia,serif; font-size:17px; color:var(--ink); margin-bottom:6px; }
+.hm-desc { font-size:13px; color:var(--ink3); line-height:1.6; }
+
+/* ─── DIVIDER ─── */
+.rule { border:none; border-top:1px solid var(--rule); margin:0; }
+
+/* ─── SECTION SHELL ─── */
+.section { padding:96px 48px; }
+.section-inner { max-width:1100px; margin:0 auto; }
+.section-kicker { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:0.18em; text-transform:uppercase; margin-bottom:16px; }
+.section-kicker.sage { color:var(--sage); }
+.section-kicker.slate { color:var(--slate); }
+.section-h { font-size:clamp(32px,3.5vw,48px); margin-bottom:20px; color:var(--ink); }
+.section-lead { font-size:16px; line-height:1.75; color:var(--ink3); max-width:580px; margin-bottom:56px; }
+
+/* ─── MODULE A — SLM Creation ─── */
+.slm-section { background:var(--white); }
+
+.slm-grid { display:grid; grid-template-columns:1fr 1fr; gap:48px; align-items:start; }
+.slm-steps { display:flex; flex-direction:column; gap:0; }
+.slm-step {
+  display:flex; gap:20px;
+  padding:24px 0; border-bottom:1px solid var(--rule);
+}
+.slm-step:last-child { border-bottom:none; }
+.ss-num { font-family:'DM Mono',monospace; font-size:11px; color:var(--sage); min-width:24px; padding-top:3px; }
+.ss-title { font-weight:500; font-size:15px; color:var(--ink); margin-bottom:6px; }
+.ss-desc { font-size:13px; color:var(--ink3); line-height:1.65; }
+
+/* audience badge */
+.audience-tag {
+  display:inline-flex; align-items:center; gap:8px;
+  font-family:'DM Mono',monospace; font-size:11px; letter-spacing:0.1em;
+  text-transform:uppercase; padding:8px 16px;
+  background:var(--sage-l); color:var(--sage);
+  border-radius:var(--r); margin-bottom:48px;
+}
+.audience-tag.slate { background:var(--slate-l); color:var(--slate); }
+
+/* slm features panel */
+.slm-panel {
+  background:var(--cream); border:1px solid var(--rule);
+  border-radius:4px; padding:36px; position:sticky; top:80px;
+}
+.sp-title { font-family:'Playfair Display',Georgia,serif; font-size:20px; color:var(--ink); margin-bottom:24px; }
+.sp-features { list-style:none; display:flex; flex-direction:column; gap:16px; }
+.sp-features li {
+  font-size:14px; color:var(--ink2); display:flex; gap:12px; align-items:flex-start; line-height:1.55;
+}
+.sp-features li::before { content:''; width:5px; height:5px; border-radius:50%; background:var(--sage); margin-top:6px; flex-shrink:0; }
+.sp-quote {
+  margin-top:32px; padding-top:24px; border-top:1px solid var(--rule);
+  font-family:'Playfair Display',Georgia,serif; font-style:italic;
+  font-size:15px; color:var(--ink3); line-height:1.65;
+}
+
+/* ─── GOVERNANCE MODULE ─── */
+.gov-section { background:var(--paper); }
+
+.gov-grid { display:grid; grid-template-columns:1fr 1fr; gap:48px; align-items:start; }
+
+.gov-metrics { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.metric-card {
+  background:var(--white); border:1px solid var(--rule);
+  border-radius:4px; padding:24px 20px;
+  transition:box-shadow .2s;
+}
+.metric-card:hover { box-shadow:0 4px 20px rgba(26,26,24,0.06); }
+.mc-icon { font-size:22px; margin-bottom:12px; }
+.mc-name { font-weight:500; font-size:14px; color:var(--ink); margin-bottom:6px; }
+.mc-desc { font-size:12px; color:var(--ink3); line-height:1.6; }
+.mc-bar-wrap { margin-top:12px; height:3px; background:var(--rule); border-radius:2px; }
+.mc-bar { height:100%; border-radius:2px; background:var(--slate); }
+
+.gov-right { display:flex; flex-direction:column; gap:24px; }
+.gov-right .section-kicker { margin-bottom:0; }
+
+.gov-panel {
+  background:var(--white); border:1px solid var(--rule);
+  border-radius:4px; padding:32px;
+}
+.gp-headline { font-family:'Playfair Display',Georgia,serif; font-size:20px; margin-bottom:20px; }
+.gp-list { list-style:none; display:flex; flex-direction:column; gap:14px; }
+.gp-list li { font-size:14px; color:var(--ink2); display:flex; gap:12px; align-items:flex-start; line-height:1.55; }
+.gp-list li::before { content:'→'; color:var(--slate); flex-shrink:0; font-size:13px; margin-top:1px; }
+
+.report-preview {
+  background:var(--cream); border:1px solid var(--rule);
+  border-radius:4px; padding:28px;
+}
+.rp-label { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.15em; text-transform:uppercase; color:var(--ink3); margin-bottom:16px; }
+.rp-row { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--rule); font-size:13px; }
+.rp-row:last-child { border-bottom:none; }
+.rp-param { color:var(--ink2); }
+.rp-score { font-family:'DM Mono',monospace; font-size:12px; }
+.rp-score.good  { color:var(--sage); }
+.rp-score.warn  { color:var(--amber); }
+.rp-score.bad   { color:#a04040; }
+.rp-badge { font-size:10px; padding:2px 8px; border-radius:10px; font-family:'DM Mono',monospace; letter-spacing:0.08em; }
+.rp-badge.good  { background:var(--sage-l);  color:var(--sage); }
+.rp-badge.warn  { background:var(--amber-l); color:var(--amber); }
+.rp-badge.bad   { background:#f5e8e8; color:#a04040; }
+
+/* ─── WHY LOGMARK ─── */
+.why-section { background:var(--ink); }
+.why-section p, .why-section .section-lead { color:rgba(250,249,246,0.55); }
+.why-section h2 { color:var(--paper); }
+.why-section .section-kicker { color:rgba(74,92,78,0.9); }
+.why-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:rgba(255,255,255,0.08); margin-top:56px; }
+.why-card {
+  background:var(--ink); padding:36px 32px;
+  transition:background .2s;
+}
+.why-card:hover { background:#222220; }
+.wc-num { font-family:'DM Mono',monospace; font-size:11px; color:rgba(250,249,246,0.25); margin-bottom:20px; }
+.wc-title { font-family:'Playfair Display',Georgia,serif; font-size:19px; color:var(--paper); margin-bottom:12px; }
+.wc-desc { font-size:13px; color:rgba(250,249,246,0.45); line-height:1.7; }
+
+/* ─── USE CASES ─── */
+.uc-section { background:var(--cream); }
+.uc-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+.uc-card {
+  background:var(--white); border:1px solid var(--rule);
+  border-radius:4px; padding:28px 24px;
+}
+.uc-dept { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.15em; text-transform:uppercase; margin-bottom:12px; }
+.uc-dept.sage  { color:var(--sage); }
+.uc-dept.slate { color:var(--slate); }
+.uc-dept.stone { color:var(--stone); }
+.uc-title { font-family:'Playfair Display',Georgia,serif; font-size:17px; color:var(--ink); margin-bottom:10px; }
+.uc-desc { font-size:13px; color:var(--ink3); line-height:1.65; }
+
+/* ─── CTA ─── */
+.cta-section {
+  padding:96px 48px; text-align:center;
+  background:var(--white); border-top:1px solid var(--rule); border-bottom:1px solid var(--rule);
+}
+.cta-section h2 { font-size:clamp(32px,4vw,52px); margin-bottom:16px; max-width:640px; margin-inline:auto; }
+.cta-section p  { font-size:16px; color:var(--ink3); margin-bottom:40px; }
+.cta-actions { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+.cta-note { margin-top:20px; font-family:'DM Mono',monospace; font-size:11px; color:var(--ink3); letter-spacing:0.08em; }
+
+/* ─── FOOTER ─── */
+footer {
+  background:var(--paper); border-top:1px solid var(--rule);
+  padding:48px; display:grid;
+  grid-template-columns:1.4fr 1fr 1fr 1fr;
+  gap:40px; max-width:1100px; margin:0 auto;
+}
+.ft-brand { font-family:'Playfair Display',Georgia,serif; font-size:18px; color:var(--ink); margin-bottom:10px; }
+.ft-brand em { font-style:normal; color:var(--sage); }
+.ft-tagline { font-size:13px; color:var(--ink3); line-height:1.65; }
+.ft-col-h { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.15em; text-transform:uppercase; color:var(--ink3); margin-bottom:14px; }
+.ft-links { list-style:none; display:flex; flex-direction:column; gap:10px; }
+.ft-links a { font-size:13px; color:var(--ink3); text-decoration:none; transition:color .2s; }
+.ft-links a:hover { color:var(--ink); }
+.footer-bar {
+  border-top:1px solid var(--rule); padding:20px 48px;
+  display:flex; justify-content:space-between;
+  font-family:'DM Mono',monospace; font-size:11px; color:var(--ink3); letter-spacing:0.06em;
+}
+
+/* ─── REVEAL ─── */
+/* ─── ALPHA BADGE ─── */
+.alpha-badge {
+  display:inline-flex; align-items:center; gap:8px;
+  font-family:'DM Mono',monospace; font-size:11px; letter-spacing:0.12em;
+  text-transform:uppercase; padding:6px 14px;
+  background:var(--amber-l); color:var(--amber);
+  border:1px solid rgba(140,109,63,0.2);
+  border-radius:var(--r); margin-bottom:20px;
+}
+.alpha-dot { width:6px; height:6px; border-radius:50%; background:var(--amber); animation:alphaPulse 2s ease infinite; }
+@keyframes alphaPulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+
+/* ─── PILOT SECTION ─── */
+.pilot-section { background:var(--cream); border-top:1px solid var(--rule); border-bottom:1px solid var(--rule); }
+.pilot-grid { display:grid; grid-template-columns:1fr 1fr; gap:64px; align-items:start; }
+.pilot-offer { background:var(--white); border:1px solid var(--rule); border-radius:4px; overflow:hidden; }
+.po-header { background:var(--ink); padding:28px 32px; }
+.po-header-label { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.18em; text-transform:uppercase; color:rgba(250,249,246,0.4); margin-bottom:8px; }
+.po-header-title { font-family:'Playfair Display',Georgia,serif; font-size:22px; color:var(--paper); line-height:1.2; }
+.po-body { padding:28px 32px; }
+.po-items { list-style:none; display:flex; flex-direction:column; gap:14px; margin-bottom:28px; }
+.po-items li { font-size:14px; color:var(--ink2); display:flex; gap:12px; align-items:flex-start; line-height:1.55; }
+.po-items li::before { content:'✓'; color:var(--sage); flex-shrink:0; font-size:13px; font-weight:600; margin-top:1px; }
+.po-divider { height:1px; background:var(--rule); margin-bottom:24px; }
+.po-note { font-size:13px; color:var(--ink3); line-height:1.65; font-style:italic; }
+.pilot-form-wrap { display:flex; flex-direction:column; gap:24px; }
+.pf-intro { font-size:16px; line-height:1.75; color:var(--ink2); }
+.pf-intro strong { color:var(--ink); font-weight:500; }
+.pilot-form { display:flex; flex-direction:column; gap:14px; }
+.pf-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.pf-field { display:flex; flex-direction:column; gap:6px; }
+.pf-field label { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color:var(--ink3); }
+.pf-field input, .pf-field select, .pf-field textarea {
+  font-family:'Epilogue',sans-serif; font-size:14px; color:var(--ink);
+  background:var(--paper); border:1px solid var(--rule);
+  border-radius:var(--r); padding:11px 14px; outline:none;
+  transition:border-color .2s; -webkit-appearance:none; appearance:none;
+}
+.pf-field input:focus, .pf-field select:focus, .pf-field textarea:focus { border-color:var(--ink3); background:var(--white); }
+.pf-field textarea { resize:vertical; min-height:90px; line-height:1.6; }
+.pf-field.full { grid-column:span 2; }
+.pf-submit { font-size:14px; font-weight:500; padding:14px 28px; background:var(--ink); color:var(--white); border:none; border-radius:var(--r); cursor:pointer; transition:background .2s; text-align:center; letter-spacing:0.02em; width:100%; }
+.pf-submit:hover { background:var(--ink2); }
+.pf-privacy { font-family:'DM Mono',monospace; font-size:10px; color:var(--ink3); letter-spacing:0.06em; line-height:1.6; }
+.pilot-principles { display:flex; flex-direction:column; gap:16px; }
+.pp-card { background:var(--white); border:1px solid var(--rule); border-radius:4px; padding:22px 24px; display:flex; gap:16px; align-items:flex-start; }
+.pp-num { font-family:'DM Mono',monospace; font-size:11px; color:var(--amber); min-width:24px; padding-top:2px; }
+.pp-title { font-weight:500; font-size:14px; color:var(--ink); margin-bottom:5px; }
+.pp-desc { font-size:13px; color:var(--ink3); line-height:1.6; }
+@media(max-width:860px){
+  .pilot-grid { grid-template-columns:1fr; gap:40px; }
+  .pf-row { grid-template-columns:1fr; }
+  .pf-field.full { grid-column:span 1; }
+}
+
+.reveal { opacity:0; transform:translateY(20px); transition:opacity .65s ease, transform .65s ease; }
+.reveal.on { opacity:1; transform:none; }
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:860px){
+  nav { padding:0 24px; }
+  .nav-links { display:none; }
+  .hero, .slm-grid, .gov-grid { grid-template-columns:1fr; gap:40px; padding:60px 24px; }
+  .hero { padding-top:60px; }
+  .section { padding:60px 24px; }
+  .why-grid, .uc-grid, .gov-metrics { grid-template-columns:1fr; }
+  .gov-metrics { grid-template-columns:1fr 1fr; }
+  footer { grid-template-columns:1fr 1fr; padding:40px 24px; }
+  .footer-bar { padding:16px 24px; flex-direction:column; gap:6px; }
+  .cta-section { padding:60px 24px; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#">Log<em>mark</em></a>
+  <ul class="nav-links">
+    <li><a href="#slm">SLM Creation</a></li>
+    <li><a href="#governance">Governance</a></li>
+    <li><a href="#why">Why Logmark</a></li>
+    <li><a href="#usecases">Use Cases</a></li>
+    <li><a href="#pilot">Pilot</a></li>
+  </ul>
+  <a href="#pilot" class="nav-cta">Apply to pilot</a>
+</nav>
+
+<!-- HERO -->
+<section style="background:var(--white);border-bottom:1px solid var(--rule);">
+  <div class="hero">
+    <div>
+      <div class="alpha-badge"><span class="alpha-dot"></span>Alpha — Pilot Programme Open</div>
+      <div class="hero-kicker">Private AI · People Operations · Governance</div>
+      <h1>Responsible AI for<br><em>People Operations</em><br>Teams.</h1>
+      <p class="hero-lead">Logmark is in active development and inviting organisations to pilot and co-evolve the platform with us. Join a small group of People Operations teams helping shape responsible AI for talent workflows.</p>
+      <div class="hero-actions">
+        <a href="#pilot" class="btn-p">Apply to pilot</a>
+        <a href="#slm" class="btn-s">Explore the platform</a>
+      </div>
+    </div>
+    <div class="hero-modules">
+      <div class="hero-mod">
+        <div class="hm-pip sage"></div>
+        <div>
+          <div class="hm-label">Module 01</div>
+          <div class="hm-title">SLM Creation</div>
+          <div class="hm-desc">Build a custom small language model around your organisation's sensitive People Operations data — no technical team required. Stays entirely on your infrastructure.</div>
+        </div>
+      </div>
+      <div class="hero-mod">
+        <div class="hm-pip slate"></div>
+        <div>
+          <div class="hm-label">Module 02</div>
+          <div class="hm-title">Governance</div>
+          <div class="hm-desc">Quantify model performance across bias, toxicity, auditability, and statistical fairness. Give decision-makers the evidence they need before deployment.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- MODULE A: SLM CREATION -->
+<section class="section slm-section" id="slm">
+  <div class="section-inner">
+    <div class="reveal">
+      <div class="section-kicker sage">Module 01 — SLM Creation</div>
+      <h2 class="section-h">Your data. Your model.<br>Your infrastructure.</h2>
+      <p class="section-lead">Non-technical People Operations stakeholders can create and deploy a bespoke Small Language Model trained on their organisation's sensitive data — without writing a single line of code, and without data ever leaving their systems.</p>
+      <div class="audience-tag">
+        <span>●</span> Built for non-technical People Operations stakeholders
+      </div>
+    </div>
+    <div class="slm-grid">
+      <div class="slm-steps reveal">
+        <div class="slm-step">
+          <span class="ss-num">01</span>
+          <div>
+            <div class="ss-title">Connect your on-prem data sources</div>
+            <div class="ss-desc">Point Logmark at your HRIS, ATS, policy documents, and knowledge repositories. All data processing happens within your network boundary — nothing moves to the cloud.</div>
+          </div>
+        </div>
+        <div class="slm-step">
+          <span class="ss-num">02</span>
+          <div>
+            <div class="ss-title">Define your assistant's scope</div>
+            <div class="ss-desc">Use guided templates to describe what the assistant should know, how it should respond, and what it should never do. No prompt engineering experience needed.</div>
+          </div>
+        </div>
+        <div class="slm-step">
+          <span class="ss-num">03</span>
+          <div>
+            <div class="ss-title">Set access and permissions</div>
+            <div class="ss-desc">Assign the assistant to specific teams, roles, or departments. Control who can query it and what data each audience can surface.</div>
+          </div>
+        </div>
+        <div class="slm-step">
+          <span class="ss-num">04</span>
+          <div>
+            <div class="ss-title">Deploy and monitor</div>
+            <div class="ss-desc">Publish to your team in minutes. The Governance module begins measuring performance immediately, giving you a live view of model health from day one.</div>
+          </div>
+        </div>
+      </div>
+      <div class="reveal">
+        <div class="slm-panel">
+          <div class="sp-title">What your team can build</div>
+          <ul class="sp-features">
+            <li>A compensation assistant that answers pay-band and benchmark queries without exposing individual salaries</li>
+            <li>A policy advisor trained on your employee handbook, contracts, and legal guidelines</li>
+            <li>A talent-matching tool that screens candidates against role criteria using your internal competency frameworks</li>
+            <li>An onboarding guide personalised to department, role level, and location</li>
+            <li>A benefits and leave assistant that surfaces the right entitlements for each employee profile</li>
+            <li>A People Operations helpdesk that handles routine queries and escalates edge cases to the right team</li>
+          </ul>
+          <div class="sp-quote">"The power of a custom language model, without the dependency on a data science team."</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- MODULE B: GOVERNANCE -->
+<section class="section gov-section" id="governance">
+  <div class="section-inner">
+    <div class="reveal">
+      <div class="section-kicker slate">Module 02 — Governance</div>
+      <h2 class="section-h">Quantify performance.<br>Deploy with confidence.</h2>
+      <p class="section-lead">Before any AI model influences a hiring decision, a performance review, or a compensation recommendation — leaders need evidence. Logmark's Governance module measures the parameters that matter in talent workflows.</p>
+      <div class="audience-tag slate">
+        <span>●</span> Built for decision-makers evaluating AI in talent workflows
+      </div>
+    </div>
+    <div class="gov-grid">
+      <div class="gov-metrics reveal">
+        <div class="metric-card">
+          <div class="mc-name">Bias Detection</div>
+          <div class="mc-desc">Identifies differential treatment across protected characteristics — gender, age, ethnicity, disability — in model responses and ranking outputs.</div>
+          <div class="mc-bar-wrap"><div class="mc-bar" style="width:78%;background:var(--sage)"></div></div>
+        </div>
+        <div class="metric-card">
+          <div class="mc-name">Toxicity Scoring</div>
+          <div class="mc-desc">Measures the presence of harmful, demeaning, or unprofessional language in model outputs across a library of adversarial prompts.</div>
+          <div class="mc-bar-wrap"><div class="mc-bar" style="width:91%;background:var(--sage)"></div></div>
+        </div>
+        <div class="metric-card">
+          <div class="mc-name">Auditability</div>
+          <div class="mc-desc">Every decision, ranking, and recommendation is traceable to its source data. SHA-256 signed reports create an immutable chain of evidence.</div>
+          <div class="mc-bar-wrap"><div class="mc-bar" style="width:95%;background:var(--slate)"></div></div>
+        </div>
+        <div class="metric-card">
+          <div class="mc-name">Statistical Fairness</div>
+          <div class="mc-desc">Applies demographic parity, equalised odds, and calibration tests to model outputs — surfacing disparate impact before it reaches production.</div>
+          <div class="mc-bar-wrap"><div class="mc-bar" style="width:83%;background:var(--slate)"></div></div>
+        </div>
+        <div class="metric-card">
+          <div class="mc-name">Accuracy &amp; Faithfulness</div>
+          <div class="mc-desc">Measures how closely responses reflect approved knowledge-base content, reducing hallucination risk in high-stakes People Operations contexts.</div>
+          <div class="mc-bar-wrap"><div class="mc-bar" style="width:87%;background:var(--stone)"></div></div>
+        </div>
+        <div class="metric-card">
+          <div class="mc-name">Completeness</div>
+          <div class="mc-desc">Ensures the model answers the full scope of a query — not just the easiest part. Critical for policy and compliance use cases.</div>
+          <div class="mc-bar-wrap"><div class="mc-bar" style="width:74%;background:var(--stone)"></div></div>
+        </div>
+      </div>
+      <div class="gov-right reveal">
+        <div class="gov-panel">
+          <div class="gp-headline">What leaders get</div>
+          <ul class="gp-list">
+            <li>A plain-English governance report that non-technical leaders can read and act on without a data scientist in the room</li>
+            <li>RAG-status dashboards (Ready / Review / Remediate) that make deployment decisions straightforward</li>
+            <li>Signed, immutable audit files for legal, compliance, and board-level reporting</li>
+            <li>Recommendations mapped to specific governance gaps — not just scores, but next steps</li>
+            <li>Continuous monitoring after deployment, not just a one-time pre-launch check</li>
+          </ul>
+        </div>
+        <div class="report-preview">
+          <div class="rp-label">Sample governance scorecard</div>
+          <div class="rp-row">
+            <span class="rp-param">Bias — gender (hiring model)</span>
+            <span class="rp-score good">Low <span class="rp-badge good">Pass</span></span>
+          </div>
+          <div class="rp-row">
+            <span class="rp-param">Toxicity (adversarial suite)</span>
+            <span class="rp-score good">2.1% <span class="rp-badge good">Pass</span></span>
+          </div>
+          <div class="rp-row">
+            <span class="rp-param">Demographic parity delta</span>
+            <span class="rp-score warn">0.09 <span class="rp-badge warn">Review</span></span>
+          </div>
+          <div class="rp-row">
+            <span class="rp-param">Auditability index</span>
+            <span class="rp-score good">97% <span class="rp-badge good">Pass</span></span>
+          </div>
+          <div class="rp-row">
+            <span class="rp-param">Equalised odds gap</span>
+            <span class="rp-score warn">0.12 <span class="rp-badge warn">Review</span></span>
+          </div>
+          <div class="rp-row">
+            <span class="rp-param">Hallucination rate</span>
+            <span class="rp-score good">4% <span class="rp-badge good">Pass</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHY LOGMARK -->
+<section class="section why-section" id="why">
+  <div class="section-inner">
+    <div class="reveal">
+      <div class="section-kicker">Why Logmark</div>
+      <h2 class="section-h" style="color:var(--paper);">AI that your legal, People Operations, and<br>board teams can all stand behind.</h2>
+    </div>
+    <div class="why-grid reveal">
+      <div class="why-card">
+        <div class="wc-num">01</div>
+        <div class="wc-title">Stays on your infrastructure</div>
+        <div class="wc-desc">No sensitive employee or candidate data is sent to a third-party cloud. Every model runs on your own systems, under your own data governance policies.</div>
+      </div>
+      <div class="why-card">
+        <div class="wc-num">02</div>
+        <div class="wc-title">Built for non-technical teams</div>
+        <div class="wc-desc">People Operations leaders, talent managers, and People Operations teams can build and govern AI without filing an IT ticket. The platform abstracts away every technical dependency.</div>
+      </div>
+      <div class="why-card">
+        <div class="wc-num">03</div>
+        <div class="wc-title">Governance is not optional</div>
+        <div class="wc-desc">Every model deployed through Logmark is continuously evaluated. Bias, fairness, and auditability scores are always live — not a checkbox before launch.</div>
+      </div>
+      <div class="why-card">
+        <div class="wc-num">04</div>
+        <div class="wc-title">Regulation-ready by design</div>
+        <div class="wc-desc">Signed audit trails, demographic parity reporting, and model explainability outputs are built in — supporting EU AI Act, EEOC, and internal compliance requirements.</div>
+      </div>
+      <div class="why-card">
+        <div class="wc-num">05</div>
+        <div class="wc-title">Bespoke, not generic</div>
+        <div class="wc-desc">Logmark does not offer a general-purpose chatbot. It builds assistants that know your org's specific policies, structures, roles, and data — nothing more, nothing less.</div>
+      </div>
+      <div class="why-card">
+        <div class="wc-num">06</div>
+        <div class="wc-title">Evidence for every decision</div>
+        <div class="wc-desc">When a leader asks "can we trust this?", Logmark gives them a report they can read, share, and file. AI decisions backed by quantified, explainable evidence.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- USE CASES -->
+<section class="section uc-section" id="usecases">
+  <div class="section-inner">
+    <div class="reveal">
+      <div class="section-kicker sage">Use Cases</div>
+      <h2 class="section-h">Where teams are deploying Logmark</h2>
+      <p class="section-lead">Purpose-built for the workflows where AI in People Operations carries the highest stakes — and the greatest opportunity.</p>
+    </div>
+    <div class="uc-grid reveal">
+      <div class="uc-card">
+        <div class="uc-dept sage">Talent Acquisition</div>
+        <div class="uc-title">Bias-audited candidate screening</div>
+        <div class="uc-desc">Screen CVs and applications against role criteria using a model validated for demographic parity. Surface ranked shortlists with a full fairness scorecard attached.</div>
+      </div>
+      <div class="uc-card">
+        <div class="uc-dept slate">People Operations</div>
+        <div class="uc-title">Self-service People Operations assistant</div>
+        <div class="uc-desc">Answer employee questions on leave, benefits, pay, and policy using a model trained exclusively on your approved documents — never an external knowledge source.</div>
+      </div>
+      <div class="uc-card">
+        <div class="uc-dept stone">Compensation</div>
+        <div class="uc-title">Pay equity analysis</div>
+        <div class="uc-desc">Query compensation data, benchmark against bands, and surface pay gaps by role and demographic — with every query logged and auditable.</div>
+      </div>
+      <div class="uc-card">
+        <div class="uc-dept sage">Performance Management</div>
+        <div class="uc-title">Objective review calibration</div>
+        <div class="uc-desc">Assist managers in writing performance reviews that are consistent, evidence-based, and free from language that correlates with protected characteristics.</div>
+      </div>
+      <div class="uc-card">
+        <div class="uc-dept slate">Learning &amp; Development</div>
+        <div class="uc-title">Personalised development pathways</div>
+        <div class="uc-desc">Build an assistant that maps employee skills, career goals, and internal opportunity — surfacing relevant L&D resources and internal mobility options.</div>
+      </div>
+      <div class="uc-card">
+        <div class="uc-dept stone">Compliance &amp; Legal</div>
+        <div class="uc-title">AI deployment evidence pack</div>
+        <div class="uc-desc">Generate a board-ready governance report before any AI model influences a formal People Operations decision — bias scores, fairness metrics, and audit trail included.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PILOT PROGRAMME -->
+<section class="section pilot-section" id="pilot">
+  <div class="section-inner">
+    <div class="reveal">
+      <div class="alpha-badge"><span class="alpha-dot"></span>Alpha — Pilot Programme</div>
+      <h2 class="section-h">Co-evolve Logmark<br>with us.</h2>
+      <p class="section-lead">We're at an early, honest stage. The product works — and it's still being shaped. We're looking for a small number of organisations to pilot both modules, give us direct feedback, and help define what responsible AI for People Operations should actually look like.</p>
+    </div>
+    <div class="pilot-grid">
+      <div class="reveal">
+        <div class="pilot-form-wrap">
+          <p class="pf-intro">Tell us about your organisation and what you're trying to solve. <strong>We review every application personally</strong> and respond within five working days.</p>
+          <form class="pilot-form" onsubmit="handleSubmit(event)">
+            <div class="pf-row">
+              <div class="pf-field">
+                <label>Your name <span style="color:var(--amber)">*</span></label>
+                <input type="text" placeholder="Sarah Murphy" required>
+              </div>
+              <div class="pf-field">
+                <label>Job title</label>
+                <input type="text" placeholder="Chief People Officer" required>
+              </div>
+            </div>
+            <div class="pf-row">
+              <div class="pf-field">
+                <label>Organisation</label>
+                <input type="text" placeholder="Acme Corp" required>
+              </div>
+              <div class="pf-field">
+                <label>Organisation size <span style="color:var(--amber)">*</span></label>
+                <select required>
+                  <option value="">Select…</option>
+                  <option>50–250 employees</option>
+                  <option>250–1,000 employees</option>
+                  <option>1,000–5,000 employees</option>
+                  <option>5,000+ employees</option>
+                </select>
+              </div>
+            </div>
+            <div class="pf-field full">
+              <label>Email <span style="color:var(--amber)">*</span></label>
+              <input type="email" placeholder="sarah@acmecorp.com" required>
+            </div>
+            <div class="pf-field full">
+              <label>Which module interests you most?</label>
+              <select>
+                <option value="">Select…</option>
+                <option>SLM Creation — building a private AI on our data</option>
+                <option>Governance — evaluating AI models we already use</option>
+                <option>Both modules</option>
+                <option>Not sure yet — want to explore</option>
+              </select>
+            </div>
+            <div class="pf-field full">
+              <label>What are you trying to solve? (briefly)</label>
+              <textarea placeholder="e.g. We want to build an internal People Operations assistant for policy queries without sending employee data to a third-party model…"></textarea>
+            </div>
+            <button type="submit" class="pf-submit">Apply for the pilot programme</button>
+            <p class="pf-privacy">By submitting you agree to our privacy policy. We will not share your details with third parties. Logmark is built on the principles of safe and responsible AI. Pilot places are limited — we'll confirm within 5 working days.</p>
+          </form>
+          <div id="form-success" style="display:none; background:var(--sage-l); border:1px solid rgba(74,92,78,0.2); border-radius:4px; padding:28px 24px; text-align:center;">
+            <div style="font-family:'Playfair Display',Georgia,serif; font-size:20px; color:var(--sage); margin-bottom:10px;">Application received.</div>
+            <p style="font-size:14px; color:var(--ink3);">We'll review your application and be in touch within five working days. Thank you for your interest in co-evolving Logmark.</p>
+          </div>
+        </div>
+      </div>
+      <div class="reveal">
+        <div class="pilot-offer" style="margin-bottom:20px;">
+          <div class="po-header">
+            <div class="po-header-label">What pilot partners receive</div>
+            <div class="po-header-title">Full access. Direct line to<br>the product team.</div>
+          </div>
+          <div class="po-body">
+            <ul class="po-items">
+              <li>Complimentary access to both modules for the duration of the pilot</li>
+              <li>A dedicated onboarding session with the Logmark team — no sales handoff</li>
+              <li>Direct input into the product roadmap through structured monthly feedback sessions</li>
+              <li>Early access to every new feature as it ships during the pilot period</li>
+              <li>A co-authored case study (optional) documenting your governance approach</li>
+              <li>Preferred commercial terms when the product moves to general availability</li>
+            </ul>
+            <div class="po-divider"></div>
+            <p class="po-note">"We're not looking for beta testers. We're looking for organisations who have a genuine problem to solve and want to help us build the right tool to solve it."</p>
+          </div>
+        </div>
+        <div class="pilot-principles">
+          <div class="pp-card">
+            <span class="pp-num">01</span>
+            <div><div class="pp-title">We'll be honest about what's not built yet</div><div class="pp-desc">Pilot partners see the roadmap and know exactly what's coming. No overselling of capabilities that don't exist.</div></div>
+          </div>
+          <div class="pp-card">
+            <span class="pp-num">02</span>
+            <div><div class="pp-title">Your feedback shapes the product</div><div class="pp-desc">Pilot partners aren't consulted after decisions are made. They're in the room when decisions are being made.</div></div>
+          </div>
+          <div class="pp-card">
+            <span class="pp-num">03</span>
+            <div><div class="pp-title">Small cohort, high attention</div><div class="pp-desc">We're onboarding a limited number of organisations. Every pilot partner gets direct access to the team, not a support ticket queue.</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CLOSING CTA -->
+<section class="cta-section" id="cta">
+  <div class="reveal">
+    <div class="section-kicker sage" style="justify-content:center;display:flex;margin-bottom:20px;">Questions?</div>
+    <h2>Not ready to apply yet?<br>Let's talk first.</h2>
+    <p>We're happy to have an informal conversation about whether Logmark is the right fit — no commitment required.</p>
+    <div class="cta-actions">
+      <a href="mailto:pilot@logmark.ai" class="btn-p">Email us directly</a>
+      <a href="#pilot" class="btn-s">Back to pilot application</a>
+    </div>
+    <p class="cta-note">On-prem deployment · Safe &amp; Responsible AI · No data leaves your network</p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div>
+    <div class="ft-brand">Log<em>mark</em></div>
+    <p class="ft-tagline">Private AI for People Operations, Talent Management, and Human Resources. Built for governance from the ground up.</p>
+  </div>
+  <div>
+    <div class="ft-col-h">Platform</div>
+    <ul class="ft-links">
+      <li><a href="#">SLM Creation</a></li>
+      <li><a href="#">Governance Module</a></li>
+      <li><a href="#">Audit Reports</a></li>
+      <li><a href="#">Access Control</a></li>
+    </ul>
+  </div>
+  <div>
+    <div class="ft-col-h">Company</div>
+    <ul class="ft-links">
+      <li><a href="#">About</a></li>
+      <li><a href="#">Blog</a></li>
+      <li><a href="#">Careers</a></li>
+      <li><a href="#">Contact</a></li>
+    </ul>
+  </div>
+  <div>
+    <div class="ft-col-h">Legal</div>
+    <ul class="ft-links">
+      <li><a href="#">Privacy Policy</a></li>
+      <li><a href="#">Terms of Service</a></li>
+      <li><a href="#">GDPR Statement</a></li>
+      <li><a href="#">Security</a></li>
+    </ul>
+  </div>
+</footer>
+<div class="footer-bar">
+  <span>© 2026 Logmark. All rights reserved.</span>
+  <span>Private AI · People Operations · Governance</span>
+</div>
+
+<script>
+function handleSubmit(e) {
+  e.preventDefault();
+  document.querySelector('.pilot-form').style.display = 'none';
+  document.getElementById('form-success').style.display = 'block';
+}
+const io = new IntersectionObserver(e => e.forEach(x => { if(x.isIntersecting) x.target.classList.add('on'); }), { threshold:0.1 });
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+</script>
+</body>
+</html>

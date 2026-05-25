@@ -285,6 +285,10 @@ footer {
 .pf-field.full { grid-column:span 2; }
 .pf-submit { font-size:14px; font-weight:500; padding:14px 28px; background:var(--ink); color:var(--white); border:none; border-radius:var(--r); cursor:pointer; transition:background .2s; text-align:center; letter-spacing:0.02em; width:100%; }
 .pf-submit:hover { background:var(--ink2); }
+.pf-submit:disabled { background:var(--ink3); cursor:not-allowed; }
+.pf-submit .btn-spinner { display:inline-block; width:13px; height:13px; border:2px solid rgba(255,255,255,0.35); border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite; margin-right:8px; vertical-align:middle; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.pf-error { font-family:'DM Mono',monospace; font-size:11px; color:#a04040; letter-spacing:0.06em; line-height:1.6; padding:12px 16px; background:#f5e8e8; border-radius:var(--r); display:none; }
 .pf-privacy { font-family:'DM Mono',monospace; font-size:10px; color:var(--ink3); letter-spacing:0.06em; line-height:1.6; }
 .pilot-principles { display:flex; flex-direction:column; gap:16px; }
 .pp-card { background:var(--white); border:1px solid var(--rule); border-radius:4px; padding:22px 24px; display:flex; gap:16px; align-items:flex-start; }
@@ -657,7 +661,8 @@ footer {
               <label>What are you trying to solve? (briefly)</label>
               <textarea placeholder="e.g. We want to build an internal People Operations assistant for policy queries without sending employee data to a third-party model…"></textarea>
             </div>
-            <button type="submit" class="pf-submit">Apply for the pilot programme</button>
+            <button type="submit" class="pf-submit" id="pf-submit-btn">Apply for the pilot programme</button>
+            <div class="pf-error" id="pf-error">Something went wrong — please try emailing us directly at <a href="mailto:hello@logmark-ai.com" style="color:inherit;">hello@logmark-ai.com</a></div>
             <p class="pf-privacy">By submitting you agree to our privacy policy. We will not share your details with third parties. Logmark is built on the principles of safe and responsible AI. Pilot places are limited — we'll confirm within 5 working days.</p>
           </form>
           <div id="form-success" style="display:none; background:var(--sage-l); border:1px solid rgba(74,92,78,0.2); border-radius:4px; padding:28px 24px; text-align:center;">
@@ -758,13 +763,64 @@ footer {
 </div>
 
 <script>
-function handleSubmit(e) {
-  e.preventDefault();
-  document.querySelector('.pilot-form').style.display = 'none';
-  document.getElementById('form-success').style.display = 'block';
-}
-const io = new IntersectionObserver(e => e.forEach(x => { if(x.isIntersecting) x.target.classList.add('on'); }), { threshold:0.1 });
-document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+  const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbwBLevV7Pvwgo_9qjyVUEsqbQWGpieIiUK8lSG1EkD9HeYc7Bny19ASrdQQ26sINig3/exec';
+
+  function handleSubmit(e) {
+    e.preventDefault();
+
+    const form   = document.querySelector('.pilot-form');
+    const btn    = document.getElementById('pf-submit-btn');
+    const errBox = document.getElementById('pf-error');
+    const inputs = form.querySelectorAll('input, select, textarea');
+
+    const payload = {
+      submitted_at:    new Date().toLocaleString('en-GB', { dateStyle:'long', timeStyle:'short' }),
+      applicant_name:  inputs[0].value.trim(),
+      job_title:       inputs[1].value.trim(),
+      organisation:    inputs[2].value.trim(),
+      org_size:        inputs[3].value || 'Not specified',
+      applicant_email: inputs[4].value.trim(),
+      module_interest: inputs[5].value || 'Not specified',
+      use_case:        inputs[6].value.trim() || 'Not provided'
+    };
+
+    // Loading state
+    btn.disabled = true;
+    btn.innerHTML = '<span class="btn-spinner"></span>Sending…';
+    errBox.style.display = 'none';
+
+    // Build query string
+    const qs = Object.entries(payload)
+      .map(([k, v]) => encodeURIComponent(k) + '=' + encodeURIComponent(v))
+      .join('&');
+
+    const fullUrl = GOOGLE_SHEET_URL + '?' + qs;
+
+    // Use an iframe — bypasses CORS entirely, Apps Script doGet handles it perfectly
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.name = 'hidden_iframe';
+    document.body.appendChild(iframe);
+
+    iframe.onload = function() {
+      // Sheet written — show success
+      form.style.display = 'none';
+      document.getElementById('form-success').style.display = 'block';
+      document.body.removeChild(iframe);
+    };
+
+    iframe.onerror = function() {
+      btn.disabled = false;
+      btn.innerHTML = 'Apply for the pilot programme';
+      errBox.style.display = 'block';
+      document.body.removeChild(iframe);
+    };
+
+    iframe.src = fullUrl;
+  }
+
+  const io = new IntersectionObserver(e => e.forEach(x => { if(x.isIntersecting) x.target.classList.add('on'); }), { threshold:0.1 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
 </script>
 </body>
 </html>

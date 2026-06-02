@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Welcome to Logmark — Download the Community Edition</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital@0;1&family=Epilogue:wght@300;400;500&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1a18; --ink2: #3d3d38; --ink3: #7a7a72;
+    --rule: #e2e0d8; --cream: #f5f3ed; --paper: #faf9f6;
+    --white: #ffffff; --sage: #4a5c4e; --sage-l: #e8ede9;
+    --slate: #3c4a5c; --amber: #8c6d3f; --amber-l: #f5ede0;
+  }
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: var(--paper); color: var(--ink);
+    font-family: 'Epilogue', sans-serif;
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 48px 24px;
+  }
+
+  .success-wrap {
+    max-width: 680px; width: 100%; text-align: center;
+    animation: fadeUp .7s ease both;
+  }
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(24px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+
+  .check-ring {
+    width: 72px; height: 72px; border-radius: 50%;
+    background: var(--sage-l); display: flex; align-items: center;
+    justify-content: center; margin: 0 auto 32px;
+  }
+  .check-ring svg { width: 32px; height: 32px; }
+
+  .kicker {
+    font-family: 'DM Mono', monospace; font-size: 11px;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--sage); margin-bottom: 16px;
+  }
+  h1 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(32px, 5vw, 48px); font-weight: 400;
+    line-height: 1.15; color: var(--ink); margin-bottom: 16px;
+  }
+  h1 em { font-style: italic; color: var(--sage); }
+  .lead {
+    font-size: 16px; color: var(--ink3); line-height: 1.75;
+    max-width: 520px; margin: 0 auto 48px;
+  }
+
+  /* --- Cards --- */
+  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 40px; text-align: left; }
+
+  .card {
+    border: 1px solid var(--rule); border-radius: 4px;
+    background: var(--white); padding: 28px 24px;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .card.featured {
+    background: var(--ink); border-color: var(--ink);
+    grid-column: span 2;
+    flex-direction: row; align-items: center; gap: 32px;
+    padding: 32px 36px;
+  }
+
+  .card-badge {
+    font-family: 'DM Mono', monospace; font-size: 10px;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    padding: 5px 12px; border-radius: 20px; display: inline-block;
+    width: fit-content;
+  }
+  .card-badge.community { background: var(--sage-l); color: var(--sage); }
+  .card-badge.enterprise { background: rgba(250,249,246,0.12); color: rgba(250,249,246,0.6); }
+
+  .card-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 18px; color: var(--ink); line-height: 1.2;
+  }
+  .card.featured .card-title { color: var(--paper); font-size: 20px; }
+
+  .card-desc { font-size: 13px; color: var(--ink3); line-height: 1.65; }
+  .card.featured .card-desc { color: rgba(250,249,246,0.5); font-size: 14px; }
+
+  .card-features {
+    list-style: none; display: flex; flex-direction: column; gap: 9px;
+    margin-top: 4px;
+  }
+  .card-features li {
+    font-size: 13px; color: var(--ink2); display: flex; gap: 10px;
+    align-items: flex-start; line-height: 1.5;
+  }
+  .card-features li::before { content: '✓'; color: var(--sage); flex-shrink: 0; font-size: 12px; font-weight: 600; margin-top: 1px; }
+  .card.featured .card-features li { color: rgba(250,249,246,0.65); }
+  .card.featured .card-features li::before { color: #0FB5BA; }
+
+  .card-cta-wrap { margin-top: auto; }
+  .card.featured .card-cta-wrap { flex-shrink: 0; min-width: 200px; text-align: center; }
+
+  .btn-download {
+    display: block; width: 100%; text-align: center;
+    font-size: 14px; font-weight: 500; padding: 13px 24px;
+    background: var(--sage); color: var(--white);
+    border: none; border-radius: 2px; text-decoration: none;
+    cursor: pointer; transition: background .2s; letter-spacing: 0.02em;
+  }
+  .btn-download:hover { background: #3a4a3e; }
+
+  .btn-enterprise {
+    display: block; width: 100%; text-align: center;
+    font-size: 14px; font-weight: 500; padding: 13px 24px;
+    background: var(--paper); color: var(--ink);
+    border: none; border-radius: 2px; text-decoration: none;
+    cursor: pointer; transition: opacity .2s; letter-spacing: 0.02em;
+  }
+  .btn-enterprise:hover { opacity: 0.85; }
+
+  .btn-note {
+    font-family: 'DM Mono', monospace; font-size: 10px;
+    color: rgba(250,249,246,0.35); letter-spacing: 0.08em;
+    display: block; margin-top: 10px; text-align: center;
+  }
+
+  .divider-or {
+    font-family: 'DM Mono', monospace; font-size: 10px;
+    letter-spacing: 0.15em; color: var(--ink3); text-align: center;
+    margin: 8px 0 4px;
+  }
+
+  .footer-note {
+    font-family: 'DM Mono', monospace; font-size: 11px;
+    color: var(--ink3); letter-spacing: 0.08em; line-height: 1.7;
+  }
+  .footer-note a { color: var(--sage); text-decoration: none; }
+
+  @media(max-width: 600px) {
+    .cards { grid-template-columns: 1fr; }
+    .card.featured { grid-column: span 1; flex-direction: column; padding: 28px 24px; }
+    .card.featured .card-cta-wrap { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="success-wrap">
+
+  <div class="check-ring">
+    <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M7 16.5L13 22.5L25 10" stroke="#4a5c4e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+
+  <div class="kicker">Application received</div>
+  <h1>You're on the list.<br>Now <em>try it yourself.</em></h1>
+  <p class="lead">While we review your pilot application (we'll be in touch within 5 working days), you can download the <strong>Community Edition</strong> of Logmark and start exploring pre-built models right now.</p>
+
+  <div class="cards">
+
+    <div class="card">
+      <span class="card-badge community">Free · Community Edition</span>
+      <div class="card-title">Pre-built models.<br>Ready to use today.</div>
+      <div class="card-desc">Download and explore Logmark's library of ready-made models — no configuration, no data required to get started.</div>
+      <ul class="card-features">
+        <li>Pre-built policy advisor model</li>
+        <li>Leave &amp; benefits assistant (demo data)</li>
+        <li>Onboarding Q&amp;A model</li>
+      </ul>
+      <div class="card-cta-wrap" style="margin-top:20px;">
+        <a 
+          href="https://drive.google.com/uc?export=download&id=1WtCCrJ1aXvn1Q9lQ7JX8O5d8KN5sfo5A"
+          target="_blank"
+          class="btn-download"
+        >
+          ↓ Download Community Edition
+        </a>
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="card-badge" style="background:var(--slate-l);color:var(--slate);">Enterprise</span>
+      <div class="card-title">Custom models on<br>your own data.</div>
+      <div class="card-desc">The Enterprise Edition unlocks everything in your pilot application — SLM Creation, full Governance, and on-prem deployment.</div>
+      <ul class="card-features">
+        <li>Build models on your HRIS, ATS &amp; policies</li>
+        <li>Full bias, toxicity &amp; fairness scoring</li>
+        <li>Signed audit trails for compliance</li>
+        <li>On-prem — data never leaves your network</li>
+      </ul>
+      <div class="card-cta-wrap" style="margin-top:20px;">
+        <a href="mailto:hello@logmark.ai?subject=Enterprise enquiry" class="btn-download" style="background:var(--slate);">
+          Talk to us about Enterprise
+        </a>
+      </div>
+    </div>
+
+    <div class="card featured">
+      <div style="flex:1;">
+        <span class="card-badge enterprise">Unlock the full platform</span>
+        <div class="card-title" style="margin-top:12px;">Want custom models trained on <em style="font-style:italic;color:rgba(15,181,186,0.9);">your</em> data?</div>
+        <div class="card-desc" style="margin-top:8px;">The Community Edition is a great starting point — but the real power of Logmark is building assistants that know your org's specific policies, people, and structure. Switch to Enterprise to unlock SLM Creation and the full Governance module.</div>
+        <ul class="card-features" style="margin-top:16px;">
+          <li>Train on your own HRIS, ATS, and documents</li>
+          <li>Deploy entirely within your infrastructure</li>
+          <li>Continuous bias &amp; fairness monitoring post-deployment</li>
+        </ul>
+      </div>
+      <div class="card-cta-wrap">
+        <a href="mailto:hello@logmark.ai?subject=Switch to Enterprise" class="btn-enterprise">
+          Upgrade to Enterprise
+        </a>
+        <span class="btn-note">Or wait — we'll be in touch<br>about your pilot in 5 days.</span>
+      </div>
+    </div>
+
+  </div>
+
+  <p class="footer-note">
+    Questions? Email us at <a href="mailto:hello@logmark.ai">hello@logmark.ai</a> · 
+    <a href="index.html">Back to Logmark</a>
+  </p>
+
+</div>
+
+</body>
+</html>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Logmark — Run AI Locally.</title>
+<title>Logmark — Run AI Locally. Know It Works.</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,450;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -483,7 +483,7 @@
         <div class="form-card">
           <p style="font-size:14.5px; color:var(--text-dim); margin-top:0; margin-bottom:24px;">Tell us about your organisation and what you're trying to solve. <strong style="color:var(--text-dark);">We review every application personally</strong> and respond within five working days.</p>
 
-          <form action="success.html" method="POST"; document.getElementById('form-success').style.display='block'; this.style.display='none';">
+          <form onsubmit="event.preventDefault(); document.getElementById('form-success').style.display='block'; this.style.display='none';">
             <div class="form-two">
               <div class="form-row"><label>Your name <span class="req">*</span></label><input type="text" required></div>
               <div class="form-row"><label>Job title</label><input type="text"></div>
@@ -609,64 +609,7 @@
     </div>
   </div>
 </footer>
-<script>
-  const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbwBLevV7Pvwgo_9qjyVUEsqbQWGpieIiUK8lSG1EkD9HeYc7Bny19ASrdQQ26sINig3/exec';
 
-  function handleSubmit(e) {
-  e.preventDefault();
-
-  const form   = document.querySelector('.pilot-form');
-  const btn    = document.getElementById('pf-submit-btn');
-  const errBox = document.getElementById('pf-error');
-  const inputs = form.querySelectorAll('input, select, textarea');
-
-  const payload = {
-    submitted_at:    new Date().toLocaleString('en-GB', { dateStyle:'long', timeStyle:'short' }),
-    applicant_name:  inputs[0].value.trim(),
-    job_title:       inputs[1].value.trim(),
-    organisation:    inputs[2].value.trim(),
-    org_size:        inputs[3].value || 'Not specified',
-    applicant_email: inputs[4].value.trim(),
-    module_interest: inputs[5].value || 'Not specified',
-    use_case:        inputs[6].value.trim() || 'Not provided'
-  };
-
-  btn.disabled = true;
-  btn.innerHTML = '<span class="btn-spinner"></span>Sending…';
-  errBox.style.display = 'none';
-
-  const qs = Object.entries(payload)
-    .map(([k, v]) => encodeURIComponent(k) + '=' + encodeURIComponent(v))
-    .join('&');
-
-  const fullUrl = GOOGLE_SHEET_URL + '?' + qs;
-
-  const iframe = document.createElement('iframe');
-  iframe.style.display = 'none';
-  iframe.name = 'hidden_iframe';
-  document.body.appendChild(iframe);
-
-  iframe.onload = function() {
-    document.body.removeChild(iframe);
-    // ✅ Open success page in new tab
-    window.open('Success.html', '_blank');
-    // Optionally also show inline confirmation
-    form.style.display = 'none';
-    document.getElementById('form-success').style.display = 'block';
-  };
-
-  iframe.onerror = function() {
-    btn.disabled = false;
-    btn.innerHTML = 'Apply for the pilot programme';
-    errBox.style.display = 'block';
-    document.body.removeChild(iframe);
-  };
-
-  iframe.src = fullUrl;
-}
-  const io = new IntersectionObserver(e => e.forEach(x => { if(x.isIntersecting) x.target.classList.add('on'); }), { threshold:0.1 });
-  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
-</script>
 <script>
   const items = document.querySelectorAll('.reveal');
   const io = new IntersectionObserver((entries)=>{
@@ -674,7 +617,6 @@
   }, {threshold:0.15});
   items.forEach(i=>io.observe(i));
 </script>
-
 
 </body>
 </html>

@@ -609,14 +609,6 @@
     </div>
   </div>
 </footer>
-
-<script>
-  const items = document.querySelectorAll('.reveal');
-  const io = new IntersectionObserver((entries)=>{
-    entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
-  }, {threshold:0.15});
-  items.forEach(i=>io.observe(i));
-</script>
 <script>
   const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbwBLevV7Pvwgo_9qjyVUEsqbQWGpieIiUK8lSG1EkD9HeYc7Bny19ASrdQQ26sINig3/exec';
 
@@ -675,6 +667,14 @@
   const io = new IntersectionObserver(e => e.forEach(x => { if(x.isIntersecting) x.target.classList.add('on'); }), { threshold:0.1 });
   document.querySelectorAll('.reveal').forEach(el => io.observe(el));
 </script>
+<script>
+  const items = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, {threshold:0.15});
+  items.forEach(i=>io.observe(i));
+</script>
+
 
 </body>
 </html>

@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/:encryptedProfileId([a-zA-Z0-9_-]+)/:assistantName",
+      "destination": "/api/redirect"
+    }
+  ]
+}

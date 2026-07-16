@@ -16,6 +16,28 @@ export default async function handler(req, res) {
     return;
   }
 
+  // Self-healing environment variable detection
+  const redisUrl = process.env.KV_REST_API_URL || 
+                   process.env.KV_URL || 
+                   process.env.KV_UPSTASH_REDIS_REST_URL || 
+                   process.env.UPSTASH_REDIS_REST_URL;
+
+  const redisToken = process.env.KV_REST_API_TOKEN || 
+                      process.env.KV_TOKEN || 
+                      process.env.KV_UPSTASH_REDIS_REST_TOKEN || 
+                      process.env.UPSTASH_REDIS_REST_TOKEN;
+
+  if (!redisUrl || !redisToken) {
+    res.writeHead(500, { 'Content-Type': 'text/html' });
+    res.end(`
+      <div style="font-family:sans-serif; text-align:center; padding:50px 20px;">
+        <h2 style="color:#d9534f;">⚙️ Database Configuration Missing</h2>
+        <p style="color:#555;">Vercel KV / Redis environment variables were not detected. Please verify your Vercel project environment variables contain the correct keys.</p>
+      </div>
+    `);
+    return;
+  }
+
   try {
     // 1. Decode URL-safe Base64 hash back to raw Profile ID
     const base64 = encryptedProfileId.replace(/-/g, '+').replace(/_/g, '/');
@@ -23,8 +45,8 @@ export default async function handler(req, res) {
 
     // 2. Connect to Vercel KV (Redis)
     const kv = createClient({
-      url: process.env.KV_REST_API_URL,
-      token: process.env.KV_REST_API_TOKEN,
+      url: redisUrl,
+      token: redisToken,
     });
 
     // 3. Lookup the active tunnel URL mapped to the profileId

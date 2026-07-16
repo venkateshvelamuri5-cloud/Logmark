@@ -1,7 +1,6 @@
 import { createClient } from '@vercel/kv';
 
 export default async function handler(req, res) {
-  // Allow CORS requests from the local Electron app
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
@@ -21,13 +20,28 @@ export default async function handler(req, res) {
 
   const { profileId, tunnelUrl } = req.body;
 
+  // Self-healing environment variable detection
+  const redisUrl = process.env.KV_REST_API_URL || 
+                   process.env.KV_URL || 
+                   process.env.KV_UPSTASH_REDIS_REST_URL || 
+                   process.env.UPSTASH_REDIS_REST_URL;
+
+  const redisToken = process.env.KV_REST_API_TOKEN || 
+                      process.env.KV_TOKEN || 
+                      process.env.KV_UPSTASH_REDIS_REST_TOKEN || 
+                      process.env.UPSTASH_REDIS_REST_TOKEN;
+
+  if (!redisUrl || !redisToken) {
+    return res.status(500).json({ error: 'Database credentials not configured in Vercel environment variables.' });
+  }
+
   try {
     const kv = createClient({
-      url: process.env.KV_REST_API_URL,
-      token: process.env.KV_REST_API_TOKEN,
+      url: redisUrl,
+      token: redisToken,
     });
 
-    // Store mapping in Redis (ex: 7200 seconds = 2-hour TTL expiration)
+    // Store mapping in Redis (expires in 2 hours)
     await kv.set(`tunnel:${profileId}`, tunnelUrl, { ex: 7200 });
 
     res.status(200).json({ success: true });

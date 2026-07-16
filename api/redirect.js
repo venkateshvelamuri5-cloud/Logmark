@@ -1,7 +1,6 @@
-import { createClient } from '@vercel/kv';
+import { createClient } from 'redis';
 
 export default async function handler(req, res) {
-  // Safe extraction of query parameters
   const query = req.query || {};
   const encryptedProfileId = query.encryptedProfileId;
 
@@ -16,44 +15,34 @@ export default async function handler(req, res) {
     return;
   }
 
-  // Self-healing environment variable detection
-  const redisUrl = process.env.KV_REST_API_URL || 
-                   process.env.KV_URL || 
-                   process.env.KV_UPSTASH_REDIS_REST_URL || 
-                   process.env.UPSTASH_REDIS_REST_URL;
+  const redisUrl = process.env.KV_REDIS_URL;
 
-  const redisToken = process.env.KV_REST_API_TOKEN || 
-                      process.env.KV_TOKEN || 
-                      process.env.KV_UPSTASH_REDIS_REST_TOKEN || 
-                      process.env.UPSTASH_REDIS_REST_TOKEN;
-
-  if (!redisUrl || !redisToken) {
+  if (!redisUrl) {
     res.writeHead(500, { 'Content-Type': 'text/html' });
     res.end(`
       <div style="font-family:sans-serif; text-align:center; padding:50px 20px;">
         <h2 style="color:#d9534f;">⚙️ Database Configuration Missing</h2>
-        <p style="color:#555;">Vercel KV / Redis environment variables were not detected. Please verify your Vercel project environment variables contain the correct keys.</p>
+        <p style="color:#555;">The KV_REDIS_URL environment variable was not detected in Vercel.</p>
       </div>
     `);
     return;
   }
 
+  // Connect using TCP Redis client
+  const client = createClient({ url: redisUrl });
+  
   try {
+    await client.connect();
+
     // 1. Decode URL-safe Base64 hash back to raw Profile ID
     const base64 = encryptedProfileId.replace(/-/g, '+').replace(/_/g, '/');
     const profileId = Buffer.from(base64, 'base64').toString('utf8');
 
-    // 2. Connect to Vercel KV (Redis)
-    const kv = createClient({
-      url: redisUrl,
-      token: redisToken,
-    });
-
-    // 3. Lookup the active tunnel URL mapped to the profileId
-    const tunnelUrl = await kv.get(`tunnel:${profileId}`);
+    // 2. Lookup the active tunnel URL
+    const tunnelUrl = await client.get(`tunnel:${profileId}`);
 
     if (tunnelUrl) {
-      // 4. Redirect to the active local tunnel demo page
+      // 3. Redirect to the active local tunnel demo page
       res.writeHead(302, { Location: `${tunnelUrl}/demo/${profileId}` });
       res.end();
     } else {
@@ -68,5 +57,7 @@ export default async function handler(req, res) {
   } catch (error) {
     res.writeHead(500, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ error: error.message }));
+  } finally {
+    try { await client.quit(); } catch(e) {}
   }
 }

@@ -1,4 +1,4 @@
-import { createClient } from '@vercel/kv';
+import { createClient } from 'redis';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Credentials', true);
@@ -19,33 +19,25 @@ export default async function handler(req, res) {
   }
 
   const { profileId, tunnelUrl } = req.body;
+  const redisUrl = process.env.KV_REDIS_URL;
 
-  // Self-healing environment variable detection
-  const redisUrl = process.env.KV_REST_API_URL || 
-                   process.env.KV_URL || 
-                   process.env.KV_UPSTASH_REDIS_REST_URL || 
-                   process.env.UPSTASH_REDIS_REST_URL;
-
-  const redisToken = process.env.KV_REST_API_TOKEN || 
-                      process.env.KV_TOKEN || 
-                      process.env.KV_UPSTASH_REDIS_REST_TOKEN || 
-                      process.env.UPSTASH_REDIS_REST_TOKEN;
-
-  if (!redisUrl || !redisToken) {
-    return res.status(500).json({ error: 'Database credentials not configured in Vercel environment variables.' });
+  if (!redisUrl) {
+    return res.status(500).json({ error: 'KV_REDIS_URL environment variable is missing on Vercel.' });
   }
 
-  try {
-    const kv = createClient({
-      url: redisUrl,
-      token: redisToken,
-    });
+  // Connect using TCP Redis client
+  const client = createClient({ url: redisUrl });
 
-    // Store mapping in Redis (expires in 2 hours)
-    await kv.set(`tunnel:${profileId}`, tunnelUrl, { ex: 7200 });
+  try {
+    await client.connect();
+
+    // Store mapping in Redis (expires in 2 hours = 7200 seconds)
+    await client.set(`tunnel:${profileId}`, tunnelUrl, { EX: 7200 });
 
     res.status(200).json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });
+  } finally {
+    try { await client.quit(); } catch(e) {}
   }
 }

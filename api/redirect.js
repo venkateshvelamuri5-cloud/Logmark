@@ -1,7 +1,20 @@
 import { createClient } from '@vercel/kv';
 
 export default async function handler(req, res) {
-  const { encryptedProfileId } = req.query;
+  // Safe extraction of query parameters
+  const query = req.query || {};
+  const encryptedProfileId = query.encryptedProfileId;
+
+  if (!encryptedProfileId) {
+    res.writeHead(400, { 'Content-Type': 'text/html' });
+    res.end(`
+      <div style="font-family:sans-serif; text-align:center; padding:50px 20px;">
+        <h2 style="color:#d9534f;">⚠️ Invalid Request</h2>
+        <p style="color:#555;">No assistant profile ID was specified in the URL path.</p>
+      </div>
+    `);
+    return;
+  }
 
   try {
     // 1. Decode URL-safe Base64 hash back to raw Profile ID
@@ -31,6 +44,7 @@ export default async function handler(req, res) {
       `);
     }
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.writeHead(500, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: error.message }));
   }
 }

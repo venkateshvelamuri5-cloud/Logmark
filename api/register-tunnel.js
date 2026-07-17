@@ -6,7 +6,7 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
   res.setHeader(
     'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization'
   );
 
   if (req.method === 'OPTIONS') {
@@ -16,6 +16,13 @@ export default async function handler(req, res) {
 
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  // Token Verification Guard
+  const authHeader = req.headers['authorization'];
+  const expectedKey = process.env.LOGMARK_API_KEY || 'logmark_secure_session_token_2025';
+  if (!authHeader || authHeader !== `Bearer ${expectedKey}`) {
+    return res.status(401).json({ error: 'Unauthorized: Invalid or missing API credentials' });
   }
 
   const { profileId, tunnelUrl } = req.body;

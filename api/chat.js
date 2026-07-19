@@ -30,9 +30,27 @@ export default async function handler(req, res) {
     return;
   }
 
-  const githubToken = process.env.GITHUB_TOKEN || process.env.GITHUB_PAT;
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_ANON_KEY;
+  let githubToken = null;
+  let supabaseUrl = null;
+  let supabaseKey = null;
+
+  for (const key in process.env) {
+    const lk = key.toLowerCase();
+    if (lk.includes('github') && (lk.includes('token') || lk.includes('pat') || lk.includes('key'))) {
+      githubToken = process.env[key];
+    }
+    if (lk.includes('supabase') && lk.includes('url')) {
+      supabaseUrl = process.env[key];
+    }
+    if (lk.includes('supabase') && (lk.includes('key') || lk.includes('anon'))) {
+      supabaseKey = process.env[key];
+    }
+  }
+
+  // Fallbacks
+  if (!githubToken) githubToken = process.env.GITHUB_TOKEN || process.env.GITHUB_PAT;
+  if (!supabaseUrl) supabaseUrl = process.env.SUPABASE_URL;
+  if (!supabaseKey) supabaseKey = process.env.SUPABASE_ANON_KEY;
 
   if (!githubToken) {
     res.status(500).json({ error: 'Cloud LLM Credentials (GITHUB_TOKEN) missing on server.' });
@@ -115,7 +133,7 @@ export default async function handler(req, res) {
     ];
 
     // 4. Send inference request to GitHub Models Llama-3.2-3B
-    const model = 'meta-llama-3.2-3b-instruct'; // free fast SLM
+    const model = 'meta-llama-3.1-8b-instruct'; // Llama 3.1 8B
     const ghRes = await fetch('https://models.inference.ai.azure.com/chat/completions', {
       method: 'POST',
       headers: {

@@ -4,6 +4,10 @@ export default async function handler(req, res) {
   const query = req.query || {};
   const encryptedProfileId = query.encryptedProfileId;
 
+  res.setHeader('X-Frame-Options', 'ALLOWALL');
+  res.setHeader('Content-Security-Policy', 'frame-ancestors *');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+
   if (!encryptedProfileId) {
     res.writeHead(400, { 'Content-Type': 'text/html' });
     res.end(`

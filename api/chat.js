@@ -83,8 +83,12 @@ export default async function handler(req, res) {
 
     const p = rows[0];
     let meta = {};
-    if (p.avatar && p.avatar.startsWith('{')) {
-      try { meta = JSON.parse(p.avatar); } catch(e) {}
+    if (p.avatar) {
+      if (typeof p.avatar === 'object') {
+        meta = p.avatar;
+      } else if (typeof p.avatar === 'string' && p.avatar.startsWith('{')) {
+        try { meta = JSON.parse(p.avatar); } catch(e) {}
+      }
     }
 
     const systemPrompt = p.system_prompt || 'You are a helpful assistant.';

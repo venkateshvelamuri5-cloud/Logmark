@@ -136,8 +136,8 @@ export default async function handler(req, res) {
       { role: 'user', content: cleanPrompt }
     ];
 
-    // 4. Send inference request to GitHub Models Llama-3.2-3B
-    const model = 'meta-llama-3.1-8b-instruct'; // Llama 3.1 8B
+    // 4. Send inference request to GitHub Models
+    const model = 'meta-llama-4-scout-17b-16e-instruct';
     const ghRes = await fetch('https://models.inference.ai.azure.com/chat/completions', {
       method: 'POST',
       headers: {

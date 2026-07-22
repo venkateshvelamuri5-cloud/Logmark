@@ -49,6 +49,7 @@ export default async function handler(req, res) {
     gitHubTokenDetected,
     supabaseUrlDetected,
     supabaseKeyDetected,
+    allEnvKeysDetected: envKeys.filter(k => !k.startsWith('VC_') && !k.startsWith('VERCEL_')), // Filter out Vercel internals for brevity
     activeUrlUsed: redisUrl ? `${redisUrl.substring(0, 15)}...` : 'none',
   }, null, 2));
 }

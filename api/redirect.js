@@ -94,12 +94,34 @@ export default async function handler(req, res) {
       return;
     }
 
-    const tunnelUrl = await client.get(`tunnel:${profileId}`);
+    let tunnelUrl = await client.get(`tunnel:${profileId}`);
 
     if (tunnelUrl) {
-      res.writeHead(302, { Location: `${tunnelUrl}/demo/${profileId}` });
-      res.end();
-    } else {
+      // Verify if the tunnel is actually online in real-time
+      let isTunnelOnline = false;
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 1200); // 1.2 second timeout
+        const pingRes = await fetch(`${tunnelUrl}/llama-status`, { signal: controller.signal });
+        clearTimeout(timeoutId);
+        if (pingRes.ok) {
+          isTunnelOnline = true;
+        }
+      } catch (err) {
+        console.log('[Vercel Redirect] Tunnel check failed (laptop is down):', err.message);
+      }
+
+      if (isTunnelOnline) {
+        res.writeHead(302, { Location: `${tunnelUrl}/demo/${profileId}` });
+        res.end();
+        return;
+      } else {
+        // Tunnel is dead! Remove from Redis immediately so we fall back to cloud mode
+        try {
+          await client.del(`tunnel:${profileId}`);
+        } catch (e) {}
+      }
+    }
       const githubToken = process.env.GITHUB_TOKEN || process.env.GITHUB_PAT;
       if (githubToken) {
         // Laptop is Offline but Cloud Mode is Configured: Serve the cloud-hosted Chat Client

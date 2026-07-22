@@ -97,18 +97,23 @@ export default async function handler(req, res) {
     let tunnelUrl = await client.get(`tunnel:${profileId}`);
 
     if (tunnelUrl) {
-      // Verify if the tunnel is actually online in real-time
+      // Verify if the tunnel is actually online in real-time using native Node.js http/https
       let isTunnelOnline = false;
       try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 1200); // 1.2 second timeout
-        const pingRes = await fetch(`${tunnelUrl}/llama-status`, { signal: controller.signal });
-        clearTimeout(timeoutId);
-        if (pingRes.ok) {
-          isTunnelOnline = true;
-        }
+        const urlParser = new URL(tunnelUrl);
+        const protocol = urlParser.protocol === 'https:' ? require('https') : require('http');
+        isTunnelOnline = await new Promise((resolve) => {
+          const req = protocol.get(`${tunnelUrl}/llama-status`, { timeout: 1200 }, (pingRes) => {
+            resolve(pingRes.statusCode === 200);
+          });
+          req.on('error', () => resolve(false));
+          req.on('timeout', () => {
+            req.destroy();
+            resolve(false);
+          });
+        });
       } catch (err) {
-        console.log('[Vercel Redirect] Tunnel check failed (laptop is down):', err.message);
+        console.log('[Vercel Redirect] Tunnel check error:', err?.message || err);
       }
 
       if (isTunnelOnline) {
@@ -314,7 +319,6 @@ export default async function handler(req, res) {
           </div>
         `);
       }
-    }
   } catch (error) {
     res.writeHead(200, { 'Content-Type': 'text/html' });
     res.end(`

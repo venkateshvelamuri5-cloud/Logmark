@@ -31,13 +31,24 @@ export default async function handler(req, res) {
     dbConnectionTest = '🔴 Skipped (Missing KV_REDIS_URL)';
   }
 
-  res.writeHead(200, { 'Content-Type': 'application/json' });
+  // Check other key environment variables
+  const gitHubTokenDetected = envKeys.some(k => k.toLowerCase().includes('github') && (k.toLowerCase().includes('token') || k.toLowerCase().includes('pat') || k.toLowerCase().includes('key')));
+  const supabaseUrlDetected = envKeys.some(k => k.toLowerCase().includes('supabase') && k.toLowerCase().includes('url'));
+  const supabaseKeyDetected = envKeys.some(k => k.toLowerCase().includes('supabase') && (k.toLowerCase().includes('key') || k.toLowerCase().includes('anon')));
+
+  res.writeHead(200, { 
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*'
+  });
   res.end(JSON.stringify({
     success: true,
     message: "Logmark Vercel Diagnostics Status (TCP Mode)",
     databaseConnectionTest: dbConnectionTest,
     databaseErrorTrace: dbConnectionError,
     detectedRedisEnvVariables: maskedEnv,
+    gitHubTokenDetected,
+    supabaseUrlDetected,
+    supabaseKeyDetected,
     activeUrlUsed: redisUrl ? `${redisUrl.substring(0, 15)}...` : 'none',
   }, null, 2));
 }

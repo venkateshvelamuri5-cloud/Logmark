@@ -92,7 +92,22 @@ export default async function handler(req, res) {
     }
 
     const systemPrompt = p.system_prompt || 'You are a helpful assistant.';
-    const kbChunks = meta.kbChunks || [];
+    
+    // Fetch chunks from Supabase kb_chunks table
+    let kbChunks = [];
+    try {
+      const chunkRes = await fetch(`${supabaseUrl}/rest/v1/kb_chunks?profile_id=eq.${encodeURIComponent(profileId)}`, {
+        headers: {
+          'apikey': supabaseKey,
+          'Authorization': `Bearer ${supabaseKey}`
+        }
+      });
+      if (chunkRes.ok) {
+        kbChunks = await chunkRes.json();
+      }
+    } catch(err) {
+      console.warn('[RAG Loader] Failed to query kb_chunks table:', err.message);
+    }
 
     // 2. Perform RAG keyword ranking on the user's latest query
     const userMessage = messages[messages.length - 1]?.content || '';
@@ -136,28 +151,48 @@ export default async function handler(req, res) {
       { role: 'user', content: cleanPrompt }
     ];
 
-    // 4. Send inference request to GitHub Models
-    const model = 'meta-llama-4-scout-17b-16e-instruct';
-    const ghRes = await fetch('https://models.inference.ai.azure.com/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${githubToken}`
-      },
-      body: JSON.stringify({
-        messages: apiMessages,
-        model: model,
-        temperature: 0.7,
-        max_tokens: 1024
-      })
-    });
-
-    if (!ghRes.ok) {
-      const errTxt = await ghRes.text();
-      throw new Error(`GitHub Models Inference API Error: ${errTxt}`);
+    // 4. Send inference request to Groq or GitHub Models
+    const groqApiKey = process.env.GROQ_API_KEY;
+    let apiRes;
+    
+    if (groqApiKey) {
+      const groqModel = req.body.model || 'llama-3.1-8b-instant';
+      apiRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${groqApiKey}`
+        },
+        body: JSON.stringify({
+          messages: apiMessages,
+          model: groqModel,
+          temperature: 0.7,
+          max_tokens: 1024
+        })
+      });
+    } else {
+      const model = 'meta-llama-4-scout-17b-16e-instruct';
+      apiRes = await fetch('https://models.inference.ai.azure.com/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${githubToken}`
+        },
+        body: JSON.stringify({
+          messages: apiMessages,
+          model: model,
+          temperature: 0.7,
+          max_tokens: 1024
+        })
+      });
     }
 
-    const data = await ghRes.json();
+    if (!apiRes.ok) {
+      const errTxt = await apiRes.text();
+      throw new Error(`Cloud Inference API Error: ${errTxt}`);
+    }
+
+    const data = await apiRes.json();
     res.status(200).json(data);
 
   } catch(err) {

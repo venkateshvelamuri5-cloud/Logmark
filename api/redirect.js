@@ -94,6 +94,24 @@ export default async function handler(req, res) {
       return;
     }
 
+    const widgetEnabled = meta.widgetEnabled !== undefined ? !!meta.widgetEnabled : false;
+    const widgetWebhookUrl = meta.widgetWebhookUrl || '';
+    const widgetFormsJson = meta.widgetFormsJson || '[]';
+
+    if (!widgetEnabled) {
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      res.end(`
+        <div style="font-family:sans-serif; text-align:center; padding:100px 20px; background:#f9f9f9; min-height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; margin:0;">
+          <div style="background:white; padding:40px; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.05); max-width:450px; border:1px solid #eee;">
+            <div style="font-size:48px; margin-bottom:16px;">⏸️</div>
+            <h2 style="color:#2c3e50; font-size:20px; font-weight:700; margin-bottom:10px; font-family:'Segoe UI',system-ui,sans-serif;">Widget Disabled</h2>
+            <p style="color:#7f8c8d; font-size:13px; line-height:1.6; margin-bottom:0;">The website chatbot widget has been disabled by the administrator.</p>
+          </div>
+        </div>
+      `);
+      return;
+    }
+
     let tunnelUrl = await client.get(`tunnel:${profileId}`);
 
     if (tunnelUrl) {
@@ -242,7 +260,10 @@ export default async function handler(req, res) {
                 <div class="header-title">${profileName}</div>
                 <div class="header-desc">${profileDesc}</div>
               </div>
-              <div style="margin-left:auto; display:flex; align-items:center; gap:6px; background:rgba(16,185,129,0.1); padding:4px 8px; border-radius:12px; font-size:10px; color:var(--accent); font-weight:700;">
+              <div id="formTriggerBtnContainer" style="margin-left:auto; display:none;">
+                <button onclick="renderCustomForm()" style="background:var(--accent); color:white; border:none; padding:6px 12px; border-radius:8px; font-size:11px; cursor:pointer; font-weight:700;">📝 Form</button>
+              </div>
+              <div style="margin-left:10px; display:flex; align-items:center; gap:6px; background:rgba(16,185,129,0.1); padding:4px 8px; border-radius:12px; font-size:10px; color:var(--accent); font-weight:700;">
                 <span style="display:inline-block; width:6px; height:6px; background:var(--accent); border-radius:50%;"></span> Cloud
               </div>
             </div>
@@ -257,6 +278,82 @@ export default async function handler(req, res) {
             <script>
               const chatHistory = [];
               const profileId = "${profileId}";
+              const formsConfig = ${widgetFormsJson};
+              const webhookUrl = "${widgetWebhookUrl}";
+
+              if (formsConfig && formsConfig.length > 0) {
+                document.getElementById('formTriggerBtnContainer').style.display = 'block';
+              }
+
+              function renderCustomForm() {
+                const chat = document.getElementById('chat');
+                const div = document.createElement('div');
+                div.className = 'message assistant';
+                div.style.maxWidth = '90%';
+                div.style.alignSelf = 'flex-start';
+                
+                let fieldsHtml = '';
+                formsConfig.forEach(f => {
+                  fieldsHtml += `
+                    <div style="margin-bottom:10px; text-align:left;">
+                      <label style="display:block; font-size:11px; margin-bottom:4px; font-weight:600;">${f.label}</label>
+                      <input type="${f.type}" class="widget-user-input" data-key="${f.key}" required style="width:100%; padding:6px 10px; font-size:12px; border-radius:6px; border:1px solid var(--border); background:var(--bg); color:var(--text); outline:none;">
+                    </div>
+                  `;
+                });
+
+                div.innerHTML = `
+                  <div style="font-weight:700; margin-bottom:8px; font-size:13px; text-align:left;">📝 Information Request Form</div>
+                  ${fieldsHtml}
+                  <button onclick="submitWebhookForm(this)" style="background:var(--accent); color:white; border:none; padding:6px 14px; border-radius:6px; font-size:11px; cursor:pointer; font-weight:700; width:100%; margin-top:6px;">Submit Request</button>
+                `;
+                chat.appendChild(div);
+                chat.scrollTop = chat.scrollHeight;
+              }
+
+              async function submitWebhookForm(btn) {
+                const parent = btn.parentElement;
+                const inputs = parent.querySelectorAll('.widget-user-input');
+                const data = {};
+                let isValid = true;
+                inputs.forEach(input => {
+                  const val = input.value.trim();
+                  if (!val) {
+                    isValid = false;
+                    input.style.borderColor = 'red';
+                  } else {
+                    input.style.borderColor = 'var(--border)';
+                  }
+                  data[input.dataset.key] = val;
+                });
+                if (!isValid) return;
+
+                btn.disabled = true;
+                btn.textContent = 'Submitting...';
+
+                try {
+                  const res = await fetch(webhookUrl || '/api/submit-form', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      profileId,
+                      timestamp: new Date().toISOString(),
+                      payload: data
+                    })
+                  });
+                  btn.textContent = '✓ Submitted';
+                  btn.style.backgroundColor = '#2ecc71';
+                  const successDiv = document.createElement('div');
+                  successDiv.className = 'message assistant';
+                  successDiv.style.alignSelf = 'flex-start';
+                  successDiv.textContent = '✓ Thank you! Your request has been successfully submitted and actions executed.';
+                  document.getElementById('chat').appendChild(successDiv);
+                } catch(e) {
+                  btn.disabled = false;
+                  btn.textContent = 'Retry Submit';
+                  alert('Submission failed: ' + e.message);
+                }
+              }
               
               async function sendMessage() {
                 const input = document.getElementById('userInput');

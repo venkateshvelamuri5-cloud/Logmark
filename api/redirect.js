@@ -47,6 +47,7 @@ export default async function handler(req, res) {
     let profileDesc = 'Personalized SLM Assistant';
     let profileIcon = '🤖';
     let isPaused = false;
+    let meta = {};
 
     if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
       try {
@@ -63,7 +64,7 @@ export default async function handler(req, res) {
             isPaused = p.status === 'paused';
             profileName = p.name || profileName;
             
-            let meta = {};
+            meta = {};
             if (p.avatar) {
               if (typeof p.avatar === 'object') {
                 meta = p.avatar;
@@ -146,7 +147,8 @@ export default async function handler(req, res) {
       }
     }
       const githubToken = process.env.GITHUB_TOKEN || process.env.GITHUB_PAT;
-      if (githubToken) {
+      const groqApiKey = process.env.GROQ_API_KEY;
+      if (githubToken || groqApiKey) {
         // Laptop is Offline but Cloud Mode is Configured: Serve the cloud-hosted Chat Client
         res.writeHead(200, { 'Content-Type': 'text/html' });
         res.end(`
@@ -368,7 +370,7 @@ export default async function handler(req, res) {
                 indicator.style.display = 'block';
 
                 try {
-                  const res = await fetch('/api/chat', {
+                  const res = await fetch(window.location.origin + '/api/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ profileId, messages: chatHistory })

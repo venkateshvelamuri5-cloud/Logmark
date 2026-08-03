@@ -2,6 +2,7 @@
   "name": "logmark-vercel-redirect",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "dependencies": {
     "redis": "^4.6.10"
   }

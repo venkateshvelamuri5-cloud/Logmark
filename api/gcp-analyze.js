@@ -130,49 +130,136 @@ export default async function handler(req, res) {
     const p = profiles[0];
     const systemPrompt = p.system_prompt || 'You are a helpful assistant.';
 
-    // 3. Assemble Prompt Context
-    const fullPrompt = `${instructions || ''}\n\n[DOCUMENT CONTENT]\n${text}`;
-    const cleanPrompt = sanitizePII(fullPrompt);
-
-    // 4. Generate GCP Access Token
-    const accessToken = await generateGcpToken(gcpKey);
-    const gcpProjectId = JSON.parse(gcpKey).project_id;
-
-    // 5. Submit generateContent Request to Vertex AI (Gemini 1.5 Flash)
-    const vertexUrl = `https://${gcpRegion}-aiplatform.googleapis.com/v1/projects/${gcpProjectId}/locations/${gcpRegion}/publishers/google/models/gemini-1.5-flash:generateContent`;
+    // 3. Retrieve KB Chunks for RAG context matching
+    let promptWithContext = `${instructions || ''}\n\n[DOCUMENT CONTENT]\n${text}`;
     
-    const vertexBody = {
-      contents: [
-        {
-          role: 'user',
-          parts: [{ text: cleanPrompt }]
+    try {
+      const kbRes = await fetch(`${supabaseUrl}/rest/v1/kb_chunks?profile_id=eq.${encodeURIComponent(profileId)}`, {
+        headers: {
+          'apikey': supabaseKey,
+          'Authorization': `Bearer ${supabaseKey}`
         }
-      ],
-      systemInstruction: {
-        parts: [{ text: systemPrompt }]
-      },
-      generationConfig: {
-        temperature: 0.2,
-        maxOutputTokens: 2048
+      });
+      
+      if (kbRes.ok) {
+        const kbChunks = await kbRes.json();
+        if (kbChunks && kbChunks.length > 0) {
+          const queryText = (instructions || '') + ' ' + (text || '');
+          const cleanText = str => str.toLowerCase().replace(/[^a-z0-9\s]/g, '');
+          const queryTokens = cleanText(queryText).split(/\s+/).filter(w => w.length > 2);
+          const queryTokenSet = new Set(queryTokens);
+          
+          const ranked = kbChunks.map(c => {
+            const chunkTokens = cleanText(c.text || '').split(/\s+/).filter(w => w.length > 2);
+            let score = 0;
+            chunkTokens.forEach(t => {
+              if (queryTokenSet.has(t)) score += 1;
+            });
+            return { chunk: c, score };
+          })
+          .filter(x => x.score > 0)
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 3)
+          .map(x => x.chunk);
+          
+          if (ranked.length > 0) {
+            const contextText = ranked.map((c, i) => `[Source ${i+1}: ${c.src || 'doc'}]\n${c.text}`).join('\n\n');
+            promptWithContext = `Use the following RAG knowledge base context to process this document:\n` +
+              `=================================\n` +
+              `${contextText}\n` +
+              `=================================\n\n` +
+              `Task Instructions: ${instructions || ''}\n` +
+              `[DOCUMENT CONTENT]\n` +
+              `${text}`;
+          } else {
+            const fallbackChunks = kbChunks.slice(0, 3);
+            const contextText = fallbackChunks.map((c, i) => `[General Guideline ${i+1}: ${c.src || 'doc'}]\n${c.text}`).join('\n\n');
+            promptWithContext = `Use the following general guidelines to process this document:\n` +
+              `=================================\n` +
+              `${contextText}\n` +
+              `=================================\n\n` +
+              `Task Instructions: ${instructions || ''}\n` +
+              `[DOCUMENT CONTENT]\n` +
+              `${text}`;
+          }
+        }
       }
-    };
-
-    const vertexRes = await fetch(vertexUrl, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(vertexBody)
-    });
-
-    if (!vertexRes.ok) {
-      const errTxt = await vertexRes.text();
-      throw new Error(`Vertex AI Prediction Error: ${errTxt}`);
+    } catch (e) {
+      console.warn('[RAG] Failed to query kb_chunks during gcp-analyze:', e.message);
     }
 
-    const result = await vertexRes.json();
-    const generatedText = result.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const cleanPrompt = sanitizePII(promptWithContext);
+
+    // 4. Send inference request to Groq or fallback to Google Cloud Platform Vertex AI
+    const groqApiKey = process.env.GROQ_API_KEY;
+    let generatedText = '';
+
+    if (groqApiKey) {
+      const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${groqApiKey}`
+        },
+        body: JSON.stringify({
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: cleanPrompt }
+          ],
+          model: 'llama-3.1-8b-instant',
+          temperature: 0.2,
+          max_tokens: 4096
+        })
+      });
+
+      if (!groqRes.ok) {
+        const errTxt = await groqRes.text();
+        throw new Error(`Groq Inference API Error: ${errTxt}`);
+      }
+
+      const groqData = await groqRes.json();
+      generatedText = groqData.choices?.[0]?.message?.content || '';
+    } else {
+      // Generate GCP Access Token
+      const accessToken = await generateGcpToken(gcpKey);
+      const gcpProjectId = JSON.parse(gcpKey).project_id;
+
+      // Submit generateContent Request to Vertex AI (Gemini 1.5 Flash)
+      const vertexUrl = `https://${gcpRegion}-aiplatform.googleapis.com/v1/projects/${gcpProjectId}/locations/${gcpRegion}/publishers/google/models/gemini-1.5-flash:generateContent`;
+      
+      const vertexBody = {
+        contents: [
+          {
+            role: 'user',
+            parts: [{ text: cleanPrompt }]
+          }
+        ],
+        systemInstruction: {
+          parts: [{ text: systemPrompt }]
+        },
+        generationConfig: {
+          temperature: 0.2,
+          maxOutputTokens: 2048
+        }
+      };
+
+      const vertexRes = await fetch(vertexUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(vertexBody)
+      });
+
+      if (!vertexRes.ok) {
+        const errTxt = await vertexRes.text();
+        throw new Error(`Vertex AI Prediction Error: ${errTxt}`);
+      }
+
+      const result = await vertexRes.json();
+      generatedText = result.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    }
 
     res.status(200).json({ success: true, text: generatedText });
 

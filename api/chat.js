@@ -52,8 +52,9 @@ export default async function handler(req, res) {
   if (!supabaseUrl) supabaseUrl = process.env.SUPABASE_URL;
   if (!supabaseKey) supabaseKey = process.env.SUPABASE_ANON_KEY;
 
-  if (!githubToken) {
-    res.status(500).json({ error: 'Cloud LLM Credentials (GITHUB_TOKEN) missing on server.' });
+  const groqApiKey = process.env.GROQ_API_KEY;
+  if (!githubToken && !groqApiKey) {
+    res.status(500).json({ error: 'Cloud LLM Credentials (GITHUB_TOKEN or GROQ_API_KEY) missing on server.' });
     return;
   }
 
@@ -167,7 +168,7 @@ export default async function handler(req, res) {
           messages: apiMessages,
           model: groqModel,
           temperature: 0.7,
-          max_tokens: 1024
+          max_tokens: req.body.max_tokens || 4096
         })
       });
     } else {

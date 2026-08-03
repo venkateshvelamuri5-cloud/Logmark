@@ -1,4 +1,6 @@
 import { createClient } from 'redis';
+import http from 'http';
+import https from 'https';
 
 export default async function handler(req, res) {
   const query = req.query || {};
@@ -120,7 +122,7 @@ export default async function handler(req, res) {
       let isTunnelOnline = false;
       try {
         const urlParser = new URL(tunnelUrl);
-        const protocol = urlParser.protocol === 'https:' ? require('https') : require('http');
+        const protocol = urlParser.protocol === 'https:' ? https : http;
         isTunnelOnline = await new Promise((resolve) => {
           const req = protocol.get(`${tunnelUrl}/llama-status`, { timeout: 1200 }, (pingRes) => {
             resolve(pingRes.statusCode === 200);

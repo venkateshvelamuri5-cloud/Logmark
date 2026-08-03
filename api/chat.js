@@ -115,30 +115,68 @@ export default async function handler(req, res) {
     let promptWithContext = userMessage;
 
     if (kbChunks.length > 0 && userMessage) {
-      const keywords = userMessage.toLowerCase()
-        .replace(/[^\w\s]/g, '')
-        .split(/\s+/)
-        .filter(w => w.length > 2);
+      const cleanText = (str) => (str || '').toLowerCase().replace(/[^\w\s]/g, '');
+      const queryTokens = cleanText(userMessage).split(/\s+/).filter(w => w.length > 2);
+      const queryTokenSet = new Set(queryTokens);
 
-      const ranked = kbChunks.map(c => {
-        let score = 0;
-        const text = (c.text || '').toLowerCase();
-        keywords.forEach(kw => {
-          if (text.includes(kw)) score += 1;
+      if (queryTokens.length > 0) {
+        // Run A: Lexical exact keyword matching
+        const runA = kbChunks.map(c => {
+          let score = 0;
+          const text = cleanText(c.text);
+          queryTokens.forEach(kw => {
+            if (text.includes(kw)) score += 1;
+          });
+          return { chunk: c, score };
+        })
+        .filter(x => x.score > 0)
+        .sort((a, b) => b.score - a.score);
+
+        // Run B: Fuzzy Jaccard token similarity (intersection / union)
+        const runB = kbChunks.map(c => {
+          const chunkTokens = cleanText(c.text).split(/\s+/).filter(w => w.length > 2);
+          const chunkTokenSet = new Set(chunkTokens);
+          
+          let intersection = 0;
+          queryTokenSet.forEach(t => {
+            if (chunkTokenSet.has(t)) intersection += 1;
+          });
+          
+          const union = new Set([...queryTokenSet, ...chunkTokenSet]).size;
+          const score = union > 0 ? (intersection / union) : 0;
+          return { chunk: c, score };
+        })
+        .filter(x => x.score > 0)
+        .sort((a, b) => b.score - a.score);
+
+        // Combine using Reciprocal Rank Fusion (RRF) with constant k = 60
+        const rrfMap = new Map();
+        
+        runA.forEach((item, index) => {
+          const rank = index + 1;
+          const score = 1 / (60 + rank);
+          rrfMap.set(item.chunk, score);
         });
-        return { ...c, score };
-      })
-      .filter(c => c.score > 0)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 3); // top 3 chunks
 
-      if (ranked.length > 0) {
-        const contextText = ranked.map((c, i) => `[Source ${i+1}: ${c.src || 'doc'}]\n${c.text}`).join('\n\n');
-        promptWithContext = `Use the following RAG knowledge base context to answer the user query:\n` +
-          `=================================\n` +
-          `${contextText}\n` +
-          `=================================\n\n` +
-          `User Query: ${userMessage}`;
+        runB.forEach((item, index) => {
+          const rank = index + 1;
+          const currentScore = rrfMap.get(item.chunk) || 0;
+          rrfMap.set(item.chunk, currentScore + (1 / (60 + rank)));
+        });
+
+        const ranked = Array.from(rrfMap.entries())
+          .map(([chunk, rrfScore]) => ({ ...chunk, rrfScore }))
+          .sort((a, b) => b.rrfScore - a.rrfScore)
+          .slice(0, 3); // Top 3 fused chunks
+
+        if (ranked.length > 0) {
+          const contextText = ranked.map((c, i) => `[Source ${i+1}: ${c.src || 'doc'}]\n${c.text}`).join('\n\n');
+          promptWithContext = `Use the following RAG knowledge base context to answer the user query:\n` +
+            `=================================\n` +
+            `${contextText}\n` +
+            `=================================\n\n` +
+            `User Query: ${userMessage}`;
+        }
       }
     }
 

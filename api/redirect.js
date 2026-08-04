@@ -98,7 +98,7 @@ export default async function handler(req, res) {
       return;
     }
 
-    const widgetEnabled = meta.widgetEnabled !== undefined ? !!meta.widgetEnabled : false;
+    const widgetEnabled = meta.widgetEnabled !== undefined ? !!meta.widgetEnabled : true;
     const widgetWebhookUrl = meta.widgetWebhookUrl || '';
     const widgetFormsJson = meta.widgetFormsJson || '[]';
 

@@ -176,6 +176,14 @@ export default async function handler(req, res) {
             `${contextText}\n` +
             `=================================\n\n` +
             `User Query: ${userMessage}`;
+        } else {
+          const fallbackChunks = kbChunks.slice(0, 3);
+          const contextText = fallbackChunks.map((c, i) => `[General Guideline ${i+1}: ${c.src || 'doc'}]\n${c.text}`).join('\n\n');
+          promptWithContext = `Use the following general guidelines to answer the user query:\n` +
+            `=================================\n` +
+            `${contextText}\n` +
+            `=================================\n\n` +
+            `User Query: ${userMessage}`;
         }
       }
     }
@@ -184,10 +192,7 @@ export default async function handler(req, res) {
     const cleanPrompt = typeof sanitizePII === 'function' ? sanitizePII(promptWithContext) : promptWithContext;
 
     const systemInstruction = (p.system_prompt || 'You are a helpful assistant.') + 
-      '\n\nYou are also an assistant designed to capture contact details (Name, Email) and query intents naturally. ' +
-      'If the user shares their name, email, or places an order/inquiry, always append exactly this tag to the very end of your response:\n' +
-      '[LEAD_CAPTURE: {"name": "extracted_name", "email": "extracted_email", "query": "inquiry_details_or_order"}]\n' +
-      'Ensure the JSON inside the tag is valid. If no name or email is shared yet, do not append any tag.';
+      '\n\n[INSTRUCTION: If user shares contact info (name/email) or queries/orders, append: [LEAD_CAPTURE: {"name":"name","email":"email","query":"details"}] at the very end.]';
 
     // 3. Construct chat messages array
     const apiMessages = [

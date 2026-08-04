@@ -183,9 +183,15 @@ export default async function handler(req, res) {
     // Sanitize Prompt PII before sending to Cloud Inference
     const cleanPrompt = typeof sanitizePII === 'function' ? sanitizePII(promptWithContext) : promptWithContext;
 
+    const systemInstruction = (p.system_prompt || 'You are a helpful assistant.') + 
+      '\n\nYou are also an assistant designed to capture contact details (Name, Email) and query intents naturally. ' +
+      'If the user shares their name, email, or places an order/inquiry, always append exactly this tag to the very end of your response:\n' +
+      '[LEAD_CAPTURE: {"name": "extracted_name", "email": "extracted_email", "query": "inquiry_details_or_order"}]\n' +
+      'Ensure the JSON inside the tag is valid. If no name or email is shared yet, do not append any tag.';
+
     // 3. Construct chat messages array
     const apiMessages = [
-      { role: 'system', content: systemPrompt },
+      { role: 'system', content: systemInstruction },
       ...messages.slice(0, -1),
       { role: 'user', content: cleanPrompt }
     ];
@@ -232,6 +238,40 @@ export default async function handler(req, res) {
     }
 
     const data = await apiRes.json();
+    
+    // Parse the generated text for lead capture
+    let reply = data.choices?.[0]?.message?.content || '';
+    const leadRegex = /\[LEAD_CAPTURE:\s*(\{.*?\})\s*\]/s;
+    const match = reply.match(leadRegex);
+
+    if (match) {
+      // 1. Strip the tag from the text returned to the client
+      reply = reply.replace(leadRegex, '').trim();
+      if (data.choices?.[0]?.message) {
+        data.choices[0].message.content = reply;
+      }
+
+      // 2. Extract lead details
+      try {
+        const leadObj = JSON.parse(match[1]);
+        const webhookUrl = meta.widgetWebhookUrl;
+        if (webhookUrl) {
+          // Asynchronously fire the webhook so we don't block the chat response
+          fetch(webhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              profileId,
+              timestamp: new Date().toISOString(),
+              leadData: leadObj
+            })
+          }).catch(e => console.error('[Webhook error]:', e.message));
+        }
+      } catch (e) {
+        console.warn('[Lead Capture] Failed to parse lead JSON:', e.message);
+      }
+    }
+
     res.status(200).json(data);
 
   } catch(err) {

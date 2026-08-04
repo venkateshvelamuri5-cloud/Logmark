@@ -205,6 +205,7 @@ export default async function handler(req, res) {
                 border-radius: 12px;
                 font-size: 13px;
                 line-height: 1.5;
+                white-space: pre-wrap;
               }
               .message.user {
                 align-self: flex-end;
@@ -396,11 +397,18 @@ export default async function handler(req, res) {
                 }
               }
 
+              function formatMessageText(str) {
+                var html = str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                html = html.replace(/\\*\\*(.*?)\\*\\*/g, '<strong>$1</strong>');
+                html = html.replace(/\\\`(.*?)\\\`/g, '<code style="background:rgba(0,0,0,0.05); padding:2px 4px; border-radius:4px; font-family:monospace;">$1</code>');
+                return html;
+              }
+
               function appendMessage(text, sender) {
                 const chat = document.getElementById('chat');
                 const div = document.createElement('div');
                 div.className = 'message ' + sender;
-                div.textContent = text;
+                div.innerHTML = formatMessageText(text);
                 chat.appendChild(div);
                 chat.scrollTop = chat.scrollHeight;
               }

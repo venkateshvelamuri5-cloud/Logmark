@@ -18,7 +18,6 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Token Verification Guard
   const authHeader = req.headers['authorization'];
   const expectedKey = process.env.LOGMARK_API_KEY || 'logmark_secure_session_token_2025';
   if (!authHeader || authHeader !== `Bearer ${expectedKey}`) {
@@ -32,15 +31,12 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'KV_REDIS_URL environment variable is missing on Vercel.' });
   }
 
-  // Connect using TCP Redis client
   const client = createClient({ url: redisUrl });
+  client.on('error', (err) => console.error('[Redis Client Error]', err));
 
   try {
     await client.connect();
-
-    // Store mapping in Redis (expires in 2 hours = 7200 seconds)
     await client.set(`tunnel:${profileId}`, tunnelUrl, { EX: 7200 });
-
     res.status(200).json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });

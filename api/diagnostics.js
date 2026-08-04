@@ -17,6 +17,7 @@ export default async function handler(req, res) {
 
   if (redisUrl) {
     const client = createClient({ url: redisUrl });
+    client.on('error', (err) => console.error('[Redis Client Error]', err));
     try {
       await client.connect();
       await client.set('diagnostics_test_key', 'ok', { EX: 5 });

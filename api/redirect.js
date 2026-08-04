@@ -36,6 +36,7 @@ export default async function handler(req, res) {
 
   // Connect using TCP Redis client
   const client = createClient({ url: redisUrl });
+  client.on('error', (err) => console.error('[Redis Client Error]', err));
   
   try {
     await client.connect();
@@ -298,19 +299,19 @@ export default async function handler(req, res) {
                 
                 let fieldsHtml = '';
                 formsConfig.forEach(f => {
-                  fieldsHtml += `
+                  fieldsHtml += \`
                     <div style="margin-bottom:10px; text-align:left;">
-                      <label style="display:block; font-size:11px; margin-bottom:4px; font-weight:600;">${f.label}</label>
-                      <input type="${f.type}" class="widget-user-input" data-key="${f.key}" required style="width:100%; padding:6px 10px; font-size:12px; border-radius:6px; border:1px solid var(--border); background:var(--bg); color:var(--text); outline:none;">
+                      <label style="display:block; font-size:11px; margin-bottom:4px; font-weight:600;">\${f.label}</label>
+                      <input type="\${f.type}" class="widget-user-input" data-key="\${f.key}" required style="width:100%; padding:6px 10px; font-size:12px; border-radius:6px; border:1px solid var(--border); background:var(--bg); color:var(--text); outline:none;">
                     </div>
-                  `;
+                  \`;
                 });
 
-                div.innerHTML = `
+                div.innerHTML = \`
                   <div style="font-weight:700; margin-bottom:8px; font-size:13px; text-align:left;">📝 Information Request Form</div>
-                  ${fieldsHtml}
+                  \${fieldsHtml}
                   <button onclick="submitWebhookForm(this)" style="background:var(--accent); color:white; border:none; padding:6px 14px; border-radius:6px; font-size:11px; cursor:pointer; font-weight:700; width:100%; margin-top:6px;">Submit Request</button>
-                `;
+                \`;
                 chat.appendChild(div);
                 chat.scrollTop = chat.scrollHeight;
               }

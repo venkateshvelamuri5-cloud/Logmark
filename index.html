@@ -141,7 +141,7 @@
   .stat:first-child{border-left:none; padding-left:4px;}
   .stat b{display:block; font-family:var(--display); font-size:clamp(30px,3.4vw,44px); font-weight:500; color:var(--text); letter-spacing:-.02em;}
   .stat b small{font-size:.5em; color:var(--text-dim); margin-left:2px;}
-  .stat span{display:block; font-size:13.5px; color:var(--text-dim); margin-top:4px; line-height:1.45;}
+  .stat > span{display:block; font-size:13.5px; color:var(--text-dim); margin-top:4px; line-height:1.45;}
   .proof-note{margin-top:14px; font-size:12.5px; color:var(--text-faint); font-family:var(--mono);}
   @media (max-width:860px){
     .proof-card{grid-template-columns:1fr 1fr; gap:22px 0;}
@@ -273,9 +273,71 @@
   .foot-col a:hover{color:var(--text);}
   .foot-bottom{margin-top:44px; padding-top:22px; border-top:1px solid var(--glass-line-soft); display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px; font-size:12px; color:var(--text-faint);}
 
+  /* ---------- extra motion ---------- */
+  .glass{position:relative;}
+  @property --ang{syntax:'<angle>'; initial-value:0deg; inherits:false;}
+  @keyframes spin{to{--ang:360deg;}}
+  .glow::after{
+    content:""; position:absolute; inset:-1px; border-radius:inherit; padding:1px; pointer-events:none;
+    background:conic-gradient(from var(--ang), transparent 0 62%, rgba(94,234,212,.9) 80%, rgba(122,162,255,.7) 88%, transparent 100%);
+    -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor;
+    mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite:exclude;
+    animation:spin 5s linear infinite; opacity:0; transition:opacity .6s ease;
+  }
+  .glow.on::after, .step.active .glow::after{opacity:1;}
+
+  /* scroll progress */
+  .progress{position:fixed; top:0; left:0; right:0; height:2px; z-index:60; transform-origin:0 50%; transform:scaleX(0);
+    background:linear-gradient(90deg, var(--signal), var(--blue)); box-shadow:0 0 12px rgba(94,234,212,.6);}
+
+  /* hero intro */
+  .hero h1 .w{display:inline-block; opacity:0; transform:translateY(42%) rotateX(-50deg); filter:blur(10px); transform-origin:50% 100%;
+    animation:wordIn 1s cubic-bezier(.2,.75,.2,1) forwards; animation-delay:calc(var(--i) * 75ms + 200ms);}
+  @keyframes wordIn{to{opacity:1; transform:none; filter:blur(0);}}
+  .intro{opacity:0; transform:translateY(16px); animation:introIn .9s cubic-bezier(.2,.75,.2,1) forwards; animation-delay:var(--d,0ms);}
+  @keyframes introIn{to{opacity:1; transform:none;}}
+  .hero h1 em .w{padding-right:.06em; background:linear-gradient(100deg, var(--signal) 0%, #B6FFF2 45%, var(--blue) 70%, var(--signal) 100%); background-size:250% 100%;
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    animation:wordIn 1s cubic-bezier(.2,.75,.2,1) forwards, sheen 7s ease-in-out 1.5s infinite; animation-delay:calc(var(--i) * 75ms + 200ms), 1.5s;}
+  @keyframes sheen{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+
+  /* ticker */
+  .ticker{overflow:hidden; padding:22px 0; border-top:1px solid var(--glass-line-soft); border-bottom:1px solid var(--glass-line-soft);
+    -webkit-mask:linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); mask:linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);}
+  .ticker-track{display:flex; gap:48px; width:max-content; animation:tick 38s linear infinite;}
+  .ticker span{font-family:var(--mono); font-size:13px; letter-spacing:.08em; color:var(--text-dim); white-space:nowrap;}
+  .ticker span::before{content:"◆"; color:var(--signal); margin-right:14px; font-size:9px; vertical-align:2px;}
+  @keyframes tick{to{transform:translateX(-50%);}}
+
+  /* 3D tilt cards */
+  .tilt{transform-style:preserve-3d; will-change:transform; transition:transform .45s cubic-bezier(.2,.75,.2,1), border-color .3s ease, opacity .8s ease;}
+  .tilt > *{transform:translateZ(18px);}
+  .feat .ico{transition:transform .5s cubic-bezier(.2,.75,.2,1), box-shadow .4s ease;}
+  .feat:hover .ico{transform:translateZ(40px) rotate(-8deg) scale(1.1); box-shadow:0 0 24px rgba(94,234,212,.35);}
+
+  /* terminal typing */
+  .term .ln{display:block; opacity:0; transform:translateX(-6px); transition:opacity .35s ease, transform .35s ease;}
+  .term .ln.on{opacity:1; transform:none;}
+  .term .caret{display:inline-block; width:8px; height:15px; background:var(--signal); vertical-align:-2px; margin-left:4px; animation:blink 1s steps(1) infinite;}
+  @keyframes blink{50%{opacity:0}}
+
+  /* stat pulse when counted */
+  .stat b{transition:text-shadow .6s ease;}
+  .stat.done b{text-shadow:0 0 24px rgba(94,234,212,.45);}
+
+  /* floating chips around the step cards */
+  .step-num{display:inline-flex; align-items:center; gap:10px;}
+  .step-num::after{content:""; width:0; height:1px; background:var(--signal); transition:width .8s cubic-bezier(.2,.75,.2,1) .2s;}
+  .step.active .step-num::after{width:60px;}
+  .step-card li{opacity:.0; transform:translateX(-8px); transition:opacity .5s ease, transform .5s ease;}
+  .step.active .step-card li{opacity:1; transform:none;}
+  .step.active .step-card li:nth-child(2){transition-delay:.12s;}
+  .step.active .step-card li:nth-child(3){transition-delay:.24s;}
+
   /* reveal */
   .reveal{opacity:0; transform:translateY(22px); transition:opacity .8s ease, transform .8s ease;}
   .reveal.in{opacity:1; transform:none;}
+  .reveal{transition-delay:var(--rd,0ms);}
 
   /* no-WebGL fallback: show static mark */
   .no-webgl .fallback-mark{display:block;}
@@ -286,11 +348,15 @@
     html{scroll-behavior:auto;}
     *, *::before, *::after{animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important;}
     .reveal{opacity:1; transform:none;}
+    .hero h1 .w, .intro{opacity:1; transform:none; filter:none;}
+    .ticker-track{animation:none;}
+    .term .ln, .step-card li{opacity:1; transform:none;}
   }
 </style>
 </head>
 <body>
 
+<div class="progress" aria-hidden="true"></div>
 <canvas id="stage" aria-hidden="true"></canvas>
 <div class="aura" aria-hidden="true"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
 <div class="grain" aria-hidden="true"></div>
@@ -324,23 +390,23 @@
   <section class="hero" data-scene="hero">
     <div class="wrap">
       <div class="hero-inner">
-        <span class="chip"><span class="dot"></span>ALPHA · WINDOWS DESKTOP APP</span>
+        <span class="chip intro" style="--d:0ms"><span class="dot"></span>ALPHA · WINDOWS DESKTOP APP</span>
         <h1>Private AI that answers from <em>your documents.</em></h1>
-        <p class="hero-sub">Logmark runs small open models on your own computer, builds assistants over your files, and shows the passage behind every answer. When the answer isn't in your documents, it tells you so instead of guessing.</p>
-        <div class="hero-ctas">
-          <a class="btn btn-primary" href="#download">
+        <p class="hero-sub intro" style="--d:900ms">Logmark runs small open models on your own computer, builds assistants over your files, and shows the passage behind every answer. When the answer isn't in your documents, it tells you so instead of guessing.</p>
+        <div class="hero-ctas intro" style="--d:1100ms">
+          <a class="btn btn-primary magnet" href="#download">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 19h16"/></svg>
             Download for Windows
           </a>
           <a class="btn btn-glass" href="#how">See how it works</a>
         </div>
-        <div class="hero-meta">
+        <div class="hero-meta intro" style="--d:1300ms">
           <span>Runs on your machine</span>
           <span>No vector database</span>
           <span>Cited answers</span>
           <span>Says "not found"</span>
         </div>
-        <div class="scroll-cue" aria-hidden="true"><i></i>SCROLL</div>
+        <div class="scroll-cue intro" style="--d:1500ms" aria-hidden="true"><i></i>SCROLL</div>
       </div>
     </div>
   </section>
@@ -348,13 +414,20 @@
   <!-- PROOF -->
   <div class="proof" data-scene="hero">
     <div class="wrap">
-      <div class="glass proof-card reveal">
-        <div class="stat"><b>8<small>/8</small></b><span>questions had the right passage in the top 5 results</span></div>
-        <div class="stat"><b>4<small>/4</small></b><span>off-topic questions correctly refused</span></div>
-        <div class="stat"><b>~17<small>s</small></b><span>to index a 150,000-word PDF</span></div>
+      <div class="glass proof-card glow reveal">
+        <div class="stat"><b><span class="num" data-to="8">8</span><small>/8</small></b><span>questions had the right passage in the top 5 results</span></div>
+        <div class="stat"><b><span class="num" data-to="4">4</span><small>/4</small></b><span>off-topic questions correctly refused</span></div>
+        <div class="stat"><b>~<span class="num" data-to="17">17</span><small>s</small></b><span>to index a 150,000-word PDF</span></div>
         <div class="stat"><b>&lt;1<small>s</small></b><span>per question, including reranking</span></div>
       </div>
       <p class="proof-note reveal">Measured on a laptop with a 150,000-word PDF of India's Labour Codes and 12 test questions. A small test, shown so you can see how we measure.</p>
+    </div>
+  </div>
+
+  <div class="ticker" aria-hidden="true">
+    <div class="ticker-track">
+      <span>llama.cpp</span><span>GGUF models</span><span>Rust engine</span><span>Semantic chunking</span><span>BM25 + embeddings</span><span>Cross-encoder reranking</span><span>Cited answers</span><span>"Not found" refusals</span><span>Q&amp;A datasets</span><span>RLAIF · RLHF</span><span>Flat-file corpora</span><span>Runs on 127.0.0.1</span>
+      <span>llama.cpp</span><span>GGUF models</span><span>Rust engine</span><span>Semantic chunking</span><span>BM25 + embeddings</span><span>Cross-encoder reranking</span><span>Cited answers</span><span>"Not found" refusals</span><span>Q&amp;A datasets</span><span>RLAIF · RLHF</span><span>Flat-file corpora</span><span>Runs on 127.0.0.1</span>
     </div>
   </div>
 
@@ -368,7 +441,7 @@
       </div>
       <div class="steps">
         <div class="step" data-step="1">
-          <div class="glass step-card">
+          <div class="glass step-card glow">
             <div class="step-num">01 · ADD</div>
             <h3>Add your documents</h3>
             <p>Drop in PDFs, Word files, spreadsheets, CSVs or plain text. Logmark extracts the text page by page and sheet by sheet, and everything stays on your machine.</p>
@@ -380,7 +453,7 @@
           </div>
         </div>
         <div class="step" data-step="2">
-          <div class="glass step-card">
+          <div class="glass step-card glow">
             <div class="step-num">02 · SPLIT</div>
             <h3>Split by meaning, not by character count</h3>
             <p>Semantic chunking cuts on whole sentences into passages of about 150 to 225 words, with a little overlap so nothing falls between the cracks.</p>
@@ -392,7 +465,7 @@
           </div>
         </div>
         <div class="step" data-step="3">
-          <div class="glass step-card">
+          <div class="glass step-card glow">
             <div class="step-num">03 · FIND</div>
             <h3>Find the right passage</h3>
             <p>Hybrid search blends meaning-based embeddings with BM25 keyword matching, then a cross-encoder reranker rescores the best 30 candidates.</p>
@@ -404,7 +477,7 @@
           </div>
         </div>
         <div class="step" data-step="4">
-          <div class="glass step-card">
+          <div class="glass step-card glow">
             <div class="step-num">04 · ANSWER</div>
             <h3>Answer with citations, or say "not found"</h3>
             <p>The model answers only from the numbered passages and cites them. If nothing relevant clears the bar, the model isn't called at all.</p>
@@ -428,37 +501,37 @@
         <p class="lede">Logmark is the product; SLM Forge is the engine room behind it. Here's what ships in the current build.</p>
       </div>
       <div class="feat-grid">
-        <article class="glass feat reveal">
+        <article class="glass feat tilt reveal">
           <div class="ico"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></div>
           <h3>Small models, on your own machine</h3>
           <p>Run open GGUF models such as Qwen 2.5 and Llama 3.2 locally through llama.cpp. No API key, and your documents never leave the computer.</p>
           <div class="k">llama.cpp · GGUF · CPU</div>
         </article>
-        <article class="glass feat reveal">
+        <article class="glass feat tilt reveal">
           <div class="ico"><svg viewBox="0 0 24 24"><path d="M12 3l2.2 4.6L19 9.3l-3.5 3.4.8 4.9L12 15.3l-4.3 2.3.8-4.9L5 9.3l4.8-1.7z"/></svg></div>
           <h3>Assistants over your documents</h3>
           <p>Give an assistant a set of documents and instructions. It answers from them using retrieval, so the model's weights never change and there's no training run to wait for.</p>
           <div class="k">RAG · no fine-tuning</div>
         </article>
-        <article class="glass feat reveal">
+        <article class="glass feat tilt reveal">
           <div class="ico"><svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4"/><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/></svg></div>
           <h3>Cited answers and honest refusals</h3>
           <p>Every answer lists the files and pages it used. Answers without citations get a warning, and off-topic questions get a clear "not found".</p>
           <div class="k">sources line · [n] citations</div>
         </article>
-        <article class="glass feat reveal">
+        <article class="glass feat tilt reveal">
           <div class="ico"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h7"/><path d="M17 15l2 2 3-4"/></svg></div>
           <h3>Datasets and evaluation</h3>
           <p>Generate question-and-answer sets from your own documents, then score your assistants with AI-assisted (RLAIF) and human (RLHF) feedback before you rely on them.</p>
           <div class="k">Q&amp;A generation · RLAIF · RLHF</div>
         </article>
-        <article class="glass feat reveal">
+        <article class="glass feat tilt reveal">
           <div class="ico"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg></div>
           <h3>Share an assistant</h3>
           <p>Share an assistant you've built with a link, or drop a small chat widget onto a web page, like the one in the corner of this site.</p>
           <div class="k">share link · embeddable widget</div>
         </article>
-        <article class="glass feat reveal">
+        <article class="glass feat tilt reveal">
           <div class="ico"><svg viewBox="0 0 24 24"><path d="M7 18a4 4 0 0 1-.6-8A6 6 0 0 1 18 9a4.5 4.5 0 0 1-.5 9z"/></svg></div>
           <h3>Optional cloud compute</h3>
           <p>When a job is too heavy for a laptop, you can choose to run it on Google Cloud compute. Day-to-day use stays on your own machine.</p>
@@ -510,12 +583,12 @@
         <h2 class="h2">For teams whose answers live in <em>long documents.</em></h2>
       </div>
       <div class="fit-grid">
-        <div class="glass fit reveal"><div class="d">HR</div><h3>Policy and benefits questions</h3><p>Leave, pay and benefits answered from your own handbook, with the page to check.</p></div>
-        <div class="glass fit reveal"><div class="d">LEGAL &amp; COMPLIANCE</div><h3>Regulations and contracts</h3><p>Ask across long codes and agreements and get the exact clause back.</p></div>
-        <div class="glass fit reveal"><div class="d">FINANCE</div><h3>Controls and procedures</h3><p>Find the rule behind a process without searching a dozen PDFs.</p></div>
-        <div class="glass fit reveal"><div class="d">IT</div><h3>Internal support guides</h3><p>Answer common how-to questions from your own runbooks.</p></div>
-        <div class="glass fit reveal"><div class="d">SUPPORT</div><h3>Product documentation</h3><p>Answers drawn only from approved material, with a clear "not found" otherwise.</p></div>
-        <div class="glass fit reveal"><div class="d">RESEARCH</div><h3>Reports and papers</h3><p>Keep sensitive reading material on one machine and still search it by meaning.</p></div>
+        <div class="glass fit tilt reveal"><div class="d">HR</div><h3>Policy and benefits questions</h3><p>Leave, pay and benefits answered from your own handbook, with the page to check.</p></div>
+        <div class="glass fit tilt reveal"><div class="d">LEGAL &amp; COMPLIANCE</div><h3>Regulations and contracts</h3><p>Ask across long codes and agreements and get the exact clause back.</p></div>
+        <div class="glass fit tilt reveal"><div class="d">FINANCE</div><h3>Controls and procedures</h3><p>Find the rule behind a process without searching a dozen PDFs.</p></div>
+        <div class="glass fit tilt reveal"><div class="d">IT</div><h3>Internal support guides</h3><p>Answer common how-to questions from your own runbooks.</p></div>
+        <div class="glass fit tilt reveal"><div class="d">SUPPORT</div><h3>Product documentation</h3><p>Answers drawn only from approved material, with a clear "not found" otherwise.</p></div>
+        <div class="glass fit tilt reveal"><div class="d">RESEARCH</div><h3>Reports and papers</h3><p>Keep sensitive reading material on one machine and still search it by meaning.</p></div>
       </div>
     </div>
   </section>
@@ -627,11 +700,11 @@
   <!-- CTA -->
   <section data-scene="end" style="padding-top:20px;">
     <div class="wrap">
-      <div class="glass cta-card reveal">
+      <div class="glass cta-card glow on reveal">
         <h2>Not ready to apply? Let's talk first.</h2>
         <p>We're happy to have an informal conversation about whether Logmark fits your team. No commitment needed.</p>
         <div class="hero-ctas">
-          <a class="btn btn-primary" href="mailto:hello@logmark-ai.com">Email hello@logmark-ai.com</a>
+          <a class="btn btn-primary magnet" href="mailto:hello@logmark-ai.com">Email hello@logmark-ai.com</a>
           <a class="btn btn-glass" href="#pilot">Back to the application</a>
         </div>
       </div>
@@ -671,6 +744,97 @@
     </div>
   </div>
 </footer>
+
+<!-- Extra motion: headline, progress bar, count-up, tilt, typing, magnets -->
+<script>
+  (function(){
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var fine = window.matchMedia('(pointer: fine)').matches;
+
+    // split the headline into words for a staggered entrance
+    var h1 = document.querySelector('.hero h1'), i = 0;
+    (function split(node){
+      Array.prototype.slice.call(node.childNodes).forEach(function(n){
+        if (n.nodeType === 3){
+          var frag = document.createDocumentFragment();
+          n.textContent.split(/(\s+)/).forEach(function(part){
+            if (!part) return;
+            if (/^\s+$/.test(part)){ frag.appendChild(document.createTextNode(part)); return; }
+            var w = document.createElement('span'); w.className = 'w'; w.style.setProperty('--i', i++); w.textContent = part; frag.appendChild(w);
+          });
+          n.parentNode.replaceChild(frag, n);
+        } else if (n.nodeType === 1){ split(n); }
+      });
+    })(h1);
+
+    // stagger reveals inside grids
+    document.querySelectorAll('.feat-grid, .fit-grid, .honest-grid').forEach(function(g){
+      Array.prototype.forEach.call(g.children, function(c, k){ c.style.setProperty('--rd', (k % 3) * 110 + 'ms'); });
+    });
+
+    // scroll progress bar
+    var bar = document.querySelector('.progress');
+    function prog(){ var h = document.documentElement.scrollHeight - innerHeight; bar.style.transform = 'scaleX(' + (h > 0 ? scrollY / h : 0) + ')'; }
+    addEventListener('scroll', prog, {passive:true}); prog();
+
+    if (!('IntersectionObserver' in window)) return;
+
+    // count-up stats
+    var proof = document.querySelector('.proof-card');
+    new IntersectionObserver(function(es, o){
+      es.forEach(function(e){
+        if (!e.isIntersecting) return; o.disconnect();
+        proof.querySelectorAll('.num').forEach(function(el){
+          var to = +el.dataset.to, t0 = performance.now(), dur = reduce ? 0 : 1400;
+          (function step(now){
+            var k = dur ? Math.min((now - t0) / dur, 1) : 1; k = 1 - Math.pow(1 - k, 3);
+            el.textContent = Math.round(to * k);
+            if (k < 1) requestAnimationFrame(step); else el.closest('.stat').classList.add('done');
+          })(t0);
+        });
+        setTimeout(function(){ proof.classList.add('on'); }, 600);
+      });
+    }, {threshold:.4}).observe(proof);
+
+    // terminal: lines appear one by one
+    var pre = document.querySelector('.term pre');
+    if (pre && !reduce){
+      pre.innerHTML = pre.innerHTML.split('\n').map(function(l){ return '<span class="ln">' + (l || '&nbsp;') + '</span>'; }).join('');
+      var caret = document.createElement('span'); caret.className = 'caret';
+      new IntersectionObserver(function(es, o){
+        es.forEach(function(e){
+          if (!e.isIntersecting) return; o.disconnect();
+          var lines = pre.querySelectorAll('.ln'), n = 0;
+          (function next(){
+            if (n >= lines.length){ lines[lines.length - 1].appendChild(caret); return; }
+            var ln = lines[n++]; ln.classList.add('on'); ln.appendChild(caret);
+            setTimeout(next, ln.textContent.indexOf('>') === 0 ? 520 : 140);
+          })();
+        });
+      }, {threshold:.35}).observe(pre);
+    }
+
+    if (reduce || !fine) return;
+
+    // 3D tilt on cards
+    document.querySelectorAll('.tilt').forEach(function(card){
+      card.addEventListener('pointermove', function(ev){
+        var r = card.getBoundingClientRect(), x = (ev.clientX - r.left) / r.width - .5, y = (ev.clientY - r.top) / r.height - .5;
+        card.style.transform = 'perspective(900px) rotateX(' + (-y * 10) + 'deg) rotateY(' + (x * 12) + 'deg) translateY(-4px)';
+      });
+      card.addEventListener('pointerleave', function(){ card.style.transform = ''; });
+    });
+
+    // magnetic buttons
+    document.querySelectorAll('.magnet').forEach(function(b){
+      b.addEventListener('pointermove', function(ev){
+        var r = b.getBoundingClientRect();
+        b.style.transform = 'translate(' + (ev.clientX - r.left - r.width / 2) * .25 + 'px,' + (ev.clientY - r.top - r.height / 2) * .35 + 'px)';
+      });
+      b.addEventListener('pointerleave', function(){ b.style.transform = ''; });
+    });
+  })();
+</script>
 
 <!-- Reveal on scroll + card spotlight -->
 <script>
@@ -821,7 +985,7 @@
 
     const uniforms = {
       uMorph: { value: 0 }, uTime: { value: 0 }, uOpacity: { value: 1 },
-      uSize: { value: 44 * renderer.getPixelRatio() }, uMouse: { value: new THREE.Vector2() },
+      uSize: { value: 44 * renderer.getPixelRatio() }, uMouse: { value: new THREE.Vector2(99, 99) }, uIntro: { value: 0 },
     };
 
     const mat = new THREE.ShaderMaterial({
@@ -829,7 +993,9 @@
       vertexShader: /* glsl */`
         attribute vec4 p0; attribute vec4 p1; attribute vec4 p2; attribute vec4 p3;
         attribute float aSeed;
-        uniform float uMorph, uTime, uSize;
+        uniform float uMorph, uTime, uSize, uIntro;
+        uniform vec2 uMouse;
+        varying float vGlow;
         varying float vHl; varying float vSeed; varying float vDepth;
         vec4 pick(float i){ if (i < 0.5) return p0; if (i < 1.5) return p1; if (i < 2.5) return p2; return p3; }
         void main(){
@@ -847,14 +1013,22 @@
           pos += swirl * (0.035 + lift * 0.9);
           vHl = mix(A.w, B.w, d);
           vSeed = aSeed;
+          // entrance: particles fly in from a wide scattered cloud
+          float intro = 1.0 - smoothstep(0.0, 1.0, clamp(uIntro * 1.4 - aSeed * 0.4, 0.0, 1.0));
+          pos += swirl * intro * 7.0;
           vec4 mv = modelViewMatrix * vec4(pos, 1.0);
+          // cursor pushes nearby particles aside and makes them glow
+          vec2 dm = mv.xy - uMouse * (-mv.z / 9.0);
+          float near = smoothstep(1.15, 0.0, length(dm));
+          mv.xy += normalize(dm + 1e-4) * near * 0.4;
+          vGlow = near;
           vDepth = clamp((-mv.z - 5.0) / 8.0, 0.0, 1.0);
           gl_PointSize = uSize * (0.55 + aSeed * 0.7 + vHl * 0.9) / -mv.z;
           gl_Position = projectionMatrix * mv;
         }`,
       fragmentShader: /* glsl */`
         uniform float uOpacity;
-        varying float vHl; varying float vSeed; varying float vDepth;
+        varying float vHl; varying float vSeed; varying float vDepth; varying float vGlow;
         void main(){
           vec2 c = gl_PointCoord - 0.5;
           float r = length(c);
@@ -862,8 +1036,8 @@
           float a = smoothstep(0.5, 0.0, r);
           vec3 base = mix(vec3(0.48, 0.64, 1.0), vec3(0.88, 0.92, 0.98), vSeed);
           vec3 hl = vec3(0.37, 0.92, 0.83);
-          vec3 col = mix(base, hl, vHl);
-          float alpha = a * (0.7 + vHl * 0.3) * (1.0 - vDepth * 0.5) * uOpacity;
+          vec3 col = mix(base, hl, max(vHl, vGlow * 0.8));
+          float alpha = a * (0.7 + vHl * 0.3 + vGlow * 0.5) * (1.0 - vDepth * 0.5) * uOpacity;
           gl_FragColor = vec4(col * alpha, alpha);
         }`,
     });
@@ -923,7 +1097,10 @@
     }
     window.addEventListener('resize', resize);
     window.addEventListener('scroll', measure, { passive: true });
+    let hasMouse = false;
+    document.documentElement.addEventListener('mouseleave', () => { hasMouse = false; uniforms.uMouse.value.set(99, 99); });
     window.addEventListener('pointermove', e => {
+      hasMouse = e.pointerType === 'mouse';
       mouse.tx = (e.clientX / window.innerWidth - 0.5) * 2;
       mouse.ty = (e.clientY / window.innerHeight - 0.5) * 2;
     }, { passive: true });
@@ -944,6 +1121,10 @@
       mouse.x += (mouse.tx - mouse.x) * 0.05; mouse.y += (mouse.ty - mouse.y) * 0.05;
 
       uniforms.uMorph.value = state.morph;
+      uniforms.uIntro.value = reduceMotion ? 1 : Math.min(uniforms.uIntro.value + dt * 0.45, 1);
+      // cursor in view space on the scene's plane (camera is 9 units away)
+      const halfH = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * 9;
+      if (hasMouse) uniforms.uMouse.value.set(mouse.tx * halfH * camera.aspect, -mouse.ty * halfH);
       uniforms.uTime.value = t;
       uniforms.uOpacity.value = state.opacity;
       group.position.x = state.x;
